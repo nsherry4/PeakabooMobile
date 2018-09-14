@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/action_opendataset"
+        android:icon="@drawable/ic_action_opendataset"
+        android:orderInCategory="100"
+        android:title="@string/action_opendataset"
+        app:showAsAction="always" />
+
+    <item
+        android:id="@+id/action_savesession"
+        android:orderInCategory="110"
+        android:title="@string/action_savesession"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_export"
+        android:orderInCategory="120"
+        android:title="@string/action_export"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_undo"
+        android:orderInCategory="130"
+        android:title="@string/action_undo"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_redo"
+        android:orderInCategory="140"
+        android:title="@string/action_redo"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_plugins"
+        android:orderInCategory="150"
+        android:title="@string/action_plugins"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_logs"
+        android:orderInCategory="160"
+        android:title="@string/action_logs"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_help"
+        android:orderInCategory="170"
+        android:title="@string/action_help"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_about"
+        android:orderInCategory="180"
+        android:title="@string/action_about"
+        app:showAsAction="never" />
+
+</menu>

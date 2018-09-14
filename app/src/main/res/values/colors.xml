@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="peakaboo_primary_light">#4caf50</color>
+    <color name="peakaboo_primary_dark">#388e3c</color>
+    <color name="peakaboo_accent">#FF4081</color>
+
+    <color name="colorPrimary">#4caf50</color>
+    <color name="colorPrimaryDark">#388e3c</color>
+    <color name="colorAccent">#FF4081</color>
+    <color name="primary_material_light_1">#f5f5f5</color>
+
+    <color name="primary_dark_material_light">#388e3c</color>
+    <color name="accent_material_light">#ff5252</color>
+</resources>
