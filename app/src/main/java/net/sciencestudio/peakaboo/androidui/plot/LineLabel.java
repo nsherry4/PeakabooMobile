@@ -1,4 +1,4 @@
-package net.sciencestudio.peakaboo.androidui.net.sciencestudio.peakaboo.androidui.plot;
+package net.sciencestudio.peakaboo.androidui.plot;
 
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.formatter.IValueFormatter;

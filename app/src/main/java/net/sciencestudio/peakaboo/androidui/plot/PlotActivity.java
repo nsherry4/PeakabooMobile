@@ -1,4 +1,4 @@
-package net.sciencestudio.peakaboo.androidui.net.sciencestudio.peakaboo.androidui.plot;
+package net.sciencestudio.peakaboo.androidui.plot;
 
 import android.content.Intent;
 import android.content.res.AssetFileDescriptor;
@@ -14,9 +14,11 @@ import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import net.sciencestudio.autodialog.model.Group;
 import net.sciencestudio.peakaboo.androidui.R;
+import net.sciencestudio.peakaboo.androidui.log.LogViewActivity;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,6 +31,8 @@ import java.util.function.Consumer;
 import java.util.logging.Level;
 
 import eventful.EventfulConfig;
+import peakaboo.common.Env;
+import peakaboo.common.PeakabooConfiguration;
 import peakaboo.common.PeakabooLog;
 import peakaboo.common.Version;
 import peakaboo.controller.plotter.PlotController;
@@ -39,15 +43,19 @@ import peakaboo.curvefit.peak.transition.TransitionSeries;
 import peakaboo.dataset.DatasetReadResult;
 import peakaboo.datasink.plugin.DataSinkPluginManager;
 import peakaboo.datasource.model.DataSource;
-import peakaboo.datasource.model.datafile.AndroidDataFile;
+import net.sciencestudio.peakaboo.androidui.AndroidDataFile;
+import net.sciencestudio.peakaboo.androidui.plot.chart.PlotChart;
+import net.sciencestudio.plural.android.ExecutorSetView;
+
 import peakaboo.datasource.plugin.DataSourcePluginManager;
 import peakaboo.filter.model.FilterPluginManager;
 import plural.executor.ExecutorSet;
 
 public class PlotActivity extends AppCompatActivity {
 
-    private PlotController controller;
-    private PlotManager chart;
+    private static final String STATE_PLOT_CONTROLLER = "plotController";
+    private PlotChart chart;
+
 
     private static final int ACTIVITY_OPEN_FILES = 1;
 
@@ -55,6 +63,7 @@ public class PlotActivity extends AppCompatActivity {
 
     //UI Lookups
     private DrawerLayout mDrawerLayout;
+    private MenuItem approveFitting, rejectFitting;
 
 
 
@@ -62,16 +71,20 @@ public class PlotActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+        PeakabooLog.get().log(Level.INFO, "Starting Plot Activity");
         lookupUI();
 
         setupToolbar();
 
         startup();
-        processIntent();
+
+        PeakabooLog.get().log(Level.WARNING, "Starting Up OnCreate");
+
+        processIntentOrRestore();
 
 
-        controller.addListener(event -> {
+
+        PlotState.controller.addListener(event -> {
             chart.update();
         });
 
@@ -83,6 +96,12 @@ public class PlotActivity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.plot_menu, menu);
+
+
+        approveFitting = menu.findItem(R.id.action_approvefitting);
+        rejectFitting = menu.findItem(R.id.action_rejectfitting);
+        System.out.println("-------> " + mDrawerLayout);
+
         return true;
     }
 
@@ -114,6 +133,7 @@ public class PlotActivity extends AppCompatActivity {
                 return true;
 
             case R.id.action_logs:
+                showLog();
                 return true;
 
             case R.id.action_help:
@@ -121,9 +141,17 @@ public class PlotActivity extends AppCompatActivity {
 
             case R.id.action_about:
                 return true;
+
+            case R.id.action_approvefitting:
+                actionApproveProposedFitting();
+                return true;
+
+            case R.id.action_rejectfitting:
+                actionRejectProposedFitting();
+                return true;
         }
 
-        return false;
+        return super.onOptionsItemSelected(item);
     }
 
     @Override
@@ -150,8 +178,8 @@ public class PlotActivity extends AppCompatActivity {
                 return;
         }
 
-    }
 
+    }
 
 
     private void lookupUI() {
@@ -173,7 +201,7 @@ public class PlotActivity extends AppCompatActivity {
 
 
 
-    private void processIntent() {
+    private void processIntentOrRestore() {
         Intent intent = getIntent();
         Uri data = intent.getData();
 
@@ -191,18 +219,28 @@ public class PlotActivity extends AppCompatActivity {
 
 
             openDataSet(Collections.singletonList(intent.getData()));
+            return;
         }
+
     }
 
 
 
     private void startup() {
 
+        PeakabooConfiguration.compression = false;
+        PeakabooConfiguration.diskstore = true;
+
         PeakabooLog.init(new File(this.getFilesDir() + "/Logging/"));
         DataSourcePluginManager.init(new File(this.getFilesDir() + "/Plugins/DataSource/"));
         DataSinkPluginManager.init(new File(this.getFilesDir() + "/Plugins/DataSink/"));
         FilterPluginManager.init(new File(this.getFilesDir() + "/Plugins/Filters/"));
         EventfulConfig.uiThreadRunner = new Handler()::post;
+
+
+        PeakabooLog.get().log(Level.INFO, "Max heap size = " + Env.maxHeap() + "MB");
+
+
 
         new Thread(() -> {
             PeakTable original = PeakTable.SYSTEM.getSource();
@@ -217,8 +255,11 @@ public class PlotActivity extends AppCompatActivity {
         }).start();
 
 
-        controller = new PlotController(this.getFilesDir());
-        chart = new PlotManager(this, controller) {
+        if (PlotState.controller == null) {
+            PlotState.controller = new PlotController(this.getFilesDir());
+        }
+
+        chart = new PlotChart(this, PlotState.controller) {
             @Override
             protected void onLongPress(int channel) {
                 tryFit(channel);
@@ -230,7 +271,7 @@ public class PlotActivity extends AppCompatActivity {
 
         Intent choose;
         choose = new Intent(Intent.ACTION_GET_CONTENT);
-        choose.setType("file/*");
+        choose.setType("*/*");
         choose.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
 
         Intent intent = Intent.createChooser(choose, "Select Data Set");
@@ -275,16 +316,33 @@ public class PlotActivity extends AppCompatActivity {
 
 
     private void tryFit(int channel) {
-        System.out.println("LongPress of " + channel);
-        System.out.println(controller.fitting().getEnergyCalibration().getMaxEnergy());
-        System.out.println(controller.fitting().getFittedTransitionSeries());
-
-        List<TransitionSeries> proposals = controller.fitting().proposeTransitionSeriesFromChannel(channel, null);
-        System.out.println(proposals);
+        List<TransitionSeries> proposals = PlotState.controller.fitting().proposeTransitionSeriesFromChannel(channel, null);
         if (proposals == null || proposals.size() == 0) {
             return;
         }
-        controller.fitting().addProposedTransitionSeries(proposals.get(0));
+        PlotState.controller.fitting().clearProposedTransitionSeries();
+        PlotState.controller.fitting().addProposedTransitionSeries(proposals.get(0));
+        showFittingProposalControls();
+    }
+
+    private void showFittingProposalControls() {
+        approveFitting.setVisible(true);
+        rejectFitting.setVisible(true);
+    }
+
+    private void hideFittingProposalControls() {
+        approveFitting.setVisible(false);
+        rejectFitting.setVisible(false);
+    }
+
+    private void actionApproveProposedFitting() {
+        PlotState.controller.fitting().commitProposedTransitionSeries();
+        hideFittingProposalControls();
+    }
+
+    private void actionRejectProposedFitting() {
+        PlotState.controller.fitting().clearProposedTransitionSeries();
+        hideFittingProposalControls();
     }
 
     private void loadDataSet(List<AndroidDataFile> datafiles) throws IOException {
@@ -295,13 +353,15 @@ public class PlotActivity extends AppCompatActivity {
             paths.add(path);
         }
 
-        System.out.println("Loading " + paths.toString());
+        PeakabooLog.get().log(Level.INFO, "Loading New Data Set From AndroidDataFiles");
 
-        DataLoader loader = new DataLoader(controller, paths) {
+        DataLoader loader = new DataLoader(PlotState.controller, paths) {
             @Override
             public void onLoading(ExecutorSet<DatasetReadResult> executorSet) {
                 //TODO:
-                System.out.println("Loading...");
+                PeakabooLog.get().log(Level.INFO, "Showing Progress Dialog");
+                ExecutorSetView progress = new ExecutorSetView(PlotActivity.this, executorSet);
+                progress.show();
             }
 
             @Override
@@ -316,8 +376,8 @@ public class PlotActivity extends AppCompatActivity {
                 }
                 System.out.println("Success!");
                 //TODO: Hack
-                controller.fitting().setMaxEnergy(20.58f);
-                controller.fitting().setMinEnergy(0f);
+                PlotState.controller.fitting().setMaxEnergy(20.58f);
+                PlotState.controller.fitting().setMinEnergy(0f);
                 chart.update();
             }
 
@@ -345,6 +405,7 @@ public class PlotActivity extends AppCompatActivity {
             public void onSessionNewer() {
                 //TODO:
                 System.out.println("onSessionNewer");
+                Toast.makeText(PlotActivity.this, R.string.toast_newersession, Toast.LENGTH_LONG);
             }
 
             @Override
@@ -360,7 +421,8 @@ public class PlotActivity extends AppCompatActivity {
 
 
     private void showLog() {
-
+        Intent i = new Intent(this, LogViewActivity.class);
+        startActivity(i);
     }
 
 }

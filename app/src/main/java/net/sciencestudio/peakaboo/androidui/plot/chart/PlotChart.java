@@ -1,11 +1,10 @@
-package net.sciencestudio.peakaboo.androidui.net.sciencestudio.peakaboo.androidui.plot;
+package net.sciencestudio.peakaboo.androidui.plot.chart;
 
 import android.support.v4.content.ContextCompat;
 import android.view.MotionEvent;
 
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.components.XAxis;
-import com.github.mikephil.charting.data.DataSet;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
@@ -17,6 +16,8 @@ import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
 
 
 import net.sciencestudio.peakaboo.androidui.R;
+import net.sciencestudio.peakaboo.androidui.plot.LineLabel;
+import net.sciencestudio.peakaboo.androidui.plot.PlotActivity;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,7 +30,6 @@ import peakaboo.controller.plotter.view.PlotData;
 import peakaboo.controller.plotter.view.PlotSettings;
 import peakaboo.curvefit.curve.fitting.FittingResult;
 import peakaboo.curvefit.curve.fitting.FittingResultSet;
-import peakaboo.curvefit.curve.fitting.FittingSet;
 import peakaboo.curvefit.peak.transition.TransitionSeries;
 import scitypes.ISpectrum;
 import scitypes.ReadOnlySpectrum;
@@ -38,7 +38,7 @@ import scitypes.SigDigits;
 /**
  * Manages the main plot and provides high-level access to it
  */
-public abstract class PlotManager {
+public abstract class PlotChart {
 
     private PlotActivity main;
     private PlotController controller;
@@ -50,7 +50,7 @@ public abstract class PlotManager {
 
     private boolean logged = true;
 
-    PlotManager(PlotActivity main, PlotController controller) {
+    PlotChart(PlotActivity main, PlotController controller) {
         this.main = main;
         this.controller = controller;
         createPlot();

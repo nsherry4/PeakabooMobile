@@ -3,6 +3,7 @@
     <color name="peakaboo_primary_light">#4caf50</color>
     <color name="peakaboo_primary_dark">#388e3c</color>
     <color name="peakaboo_accent">#FF4081</color>
+    <color name="peakaboo_toolbar_foreground">#FFFFFF</color>
 
     <color name="colorPrimary">#4caf50</color>
     <color name="colorPrimaryDark">#388e3c</color>

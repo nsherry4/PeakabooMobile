@@ -7,7 +7,7 @@
         android:icon="@drawable/ic_action_opendataset"
         android:orderInCategory="100"
         android:title="@string/action_opendataset"
-        app:showAsAction="always" />
+        app:showAsAction="never" />
 
     <item
         android:id="@+id/action_savesession"
@@ -56,5 +56,26 @@
         android:orderInCategory="180"
         android:title="@string/action_about"
         app:showAsAction="never" />
+
+
+    <!-- Context-Dependent Buttons in Action Bar -->
+    <item
+        android:id="@+id/action_approvefitting"
+        android:icon="@drawable/ic_action_acceptfitting"
+        android:orderInCategory="1000"
+        android:title="@string/action_acceptfitting"
+        app:showAsAction="always"
+        android:visible="false"
+        />
+
+    <item
+        android:id="@+id/action_rejectfitting"
+        android:icon="@drawable/ic_action_rejectfitting"
+        android:orderInCategory="1001"
+        android:title="@string/action_rejectfitting"
+        app:showAsAction="always"
+        android:visible="false"
+        />
+
 
 </menu>

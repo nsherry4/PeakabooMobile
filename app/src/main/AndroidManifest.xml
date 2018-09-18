@@ -3,6 +3,7 @@
     package="net.sciencestudio.peakaboo.androidui">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.READ_INTERNAL_STORAGE" />
 
     <application
         android:allowBackup="true"
@@ -13,17 +14,26 @@
         android:theme="@style/PeakabooTheme"
         android:usesCleartextTraffic="true">
         <activity
-            android:name=".net.sciencestudio.peakaboo.androidui.plot.PlotActivity"
-            android:theme="@style/PeakabooTheme">
+            android:name=".plot.PlotActivity"
+            android:theme="@style/PeakabooTheme"
+            >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
+
                 <category android:name="android.intent.category.DEFAULT" />
+
                 <data android:mimeType="text/plain" />
             </intent-filter>
+        </activity>
+        <activity android:name=".log.LogViewActivity"
+            android:parentActivityName=".plot.PlotActivity"
+            android:theme="@style/PeakabooTheme"
+            >
         </activity>
     </application>
 

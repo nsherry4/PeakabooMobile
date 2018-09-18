@@ -1,4 +1,4 @@
-package peakaboo.datasource.model.datafile;
+package net.sciencestudio.peakaboo.androidui;
 
 import android.content.res.AssetFileDescriptor;
 
@@ -10,6 +10,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import peakaboo.datasource.model.DataSource;
+import peakaboo.datasource.model.datafile.DataFile;
 
 public class AndroidDataFile implements DataFile {
 
