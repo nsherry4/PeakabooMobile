@@ -15,8 +15,7 @@
         android:usesCleartextTraffic="true">
         <activity
             android:name=".plot.PlotActivity"
-            android:theme="@style/PeakabooTheme"
-            >
+            android:theme="@style/PeakabooTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -30,11 +29,11 @@
                 <data android:mimeType="text/plain" />
             </intent-filter>
         </activity>
-        <activity android:name=".log.LogViewActivity"
+        <activity
+            android:name=".log.LogViewActivity"
             android:parentActivityName=".plot.PlotActivity"
-            android:theme="@style/PeakabooTheme"
-            >
-        </activity>
+            android:theme="@style/PeakabooTheme"></activity>
+        <activity android:name=".map.MapActivity"></activity>
     </application>
 
 </manifest>

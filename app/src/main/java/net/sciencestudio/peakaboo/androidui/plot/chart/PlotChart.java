@@ -233,6 +233,10 @@ public abstract class PlotChart {
         //MarkerView marker = new MarkerView(this.main, R.layout.layout_plot_marker);
         chart.setMarker(marker);
         chart.setDrawMarkers(true);
+        chart.getLegend().setEnabled(false);
+        chart.getDescription().setEnabled(false);
+
+
 
         datasets = new LineData();
         fittingLines = new HashMap<>();

@@ -6,6 +6,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Handler;
 import android.provider.OpenableColumns;
+import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
@@ -74,6 +75,12 @@ public class PlotActivity extends AppCompatActivity {
         PeakabooLog.get().log(Level.INFO, "Starting Plot Activity");
         lookupUI();
 
+        //set up drawer
+        NavigationView drawer = findViewById(R.id.plot_drawer);
+//        drawer.setNavigationItemSelectedListener(menuItem -> {
+//            System.out.println("Item Selected " + menuItem);
+//        });
+
         setupToolbar();
 
         startup();
@@ -109,9 +116,10 @@ public class PlotActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
 
-            case R.id.home:
+            case android.R.id.home:
                 mDrawerLayout.openDrawer(GravityCompat.START);
                 return true;
+
 
             case R.id.action_opendataset:
                 selectDataSet();

@@ -14,7 +14,8 @@
         android:orderInCategory="110"
         android:title="@string/action_savesession"
         app:showAsAction="never"
-        android:visible="false"
+        android:visible="true"
+        android:enabled="false"
         />
 
     <item
@@ -22,7 +23,8 @@
         android:orderInCategory="120"
         android:title="@string/action_export"
         app:showAsAction="never"
-        android:visible="false"
+        android:visible="true"
+        android:enabled="false"
         />
 
     <item
@@ -30,7 +32,8 @@
         android:orderInCategory="130"
         android:title="@string/action_undo"
         app:showAsAction="never"
-        android:visible="false"
+        android:visible="true"
+        android:enabled="false"
         />
 
     <item
@@ -38,7 +41,8 @@
         android:orderInCategory="140"
         android:title="@string/action_redo"
         app:showAsAction="never"
-        android:visible="false"
+        android:visible="true"
+        android:enabled="false"
         />
 
     <item
@@ -46,7 +50,8 @@
         android:orderInCategory="150"
         android:title="@string/action_plugins"
         app:showAsAction="never"
-        android:visible="false"
+        android:visible="true"
+        android:enabled="false"
         />
 
     <item
@@ -61,7 +66,8 @@
         android:orderInCategory="170"
         android:title="@string/action_help"
         app:showAsAction="never"
-        android:visible="false"
+        android:visible="true"
+        android:enabled="false"
         />
 
     <item
@@ -69,7 +75,8 @@
         android:orderInCategory="180"
         android:title="@string/action_about"
         app:showAsAction="never"
-        android:visible="false"
+        android:visible="true"
+        android:enabled="false"
         />
 
 

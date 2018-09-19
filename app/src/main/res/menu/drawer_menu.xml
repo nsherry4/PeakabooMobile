@@ -1,4 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <item
+        android:id="@+id/action_filters"
+        android:orderInCategory="170"
+        android:title="@string/action_filters"
+        android:visible="true"
+        android:enabled="false"
+        />
+
+    <item
+        android:id="@+id/action_fittings"
+        android:orderInCategory="170"
+        android:title="@string/action_fittings"
+        android:visible="true"
+        android:enabled="false"
+        />
+
+    <item
+        android:id="@+id/action_map"
+        android:orderInCategory="170"
+        android:title="@string/action_map"
+        android:visible="true"
+        android:enabled="false"
+        />
+
 </menu>
