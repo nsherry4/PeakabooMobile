@@ -36,8 +36,8 @@
             android:layout_weight="0"
             android:background="?attr/colorPrimary"
             android:elevation="4dp"
-            android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
-            app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
+            android:theme="@style/PeakabooTheme.AppBarOverlay"
+            app:popupTheme="@style/PeakabooTheme.PopupOverlay" />
 
         <com.github.mikephil.charting.charts.LineChart
             android:id="@+id/chart"
@@ -45,6 +45,7 @@
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:visibility="visible" />
+
 
     </LinearLayout>
 

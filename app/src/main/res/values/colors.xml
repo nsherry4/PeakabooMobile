@@ -5,11 +5,17 @@
     <color name="peakaboo_accent">#FF4081</color>
     <color name="peakaboo_toolbar_foreground">#FFFFFF</color>
 
-    <color name="colorPrimary">#4caf50</color>
-    <color name="colorPrimaryDark">#388e3c</color>
-    <color name="colorAccent">#FF4081</color>
-    <color name="primary_material_light_1">#f5f5f5</color>
+    <color name="colorPrimary">@color/peakaboo_primary_light</color>
+    <color name="colorPrimaryDark">@color/peakaboo_primary_dark</color>
+    <color name="colorAccent">@color/peakaboo_accent</color>
 
+    <color name="primary_material_light">@color/peakaboo_primary_light</color>
+    <color name="primary_dark_material_light">@color/peakaboo_primary_dark</color>
+    <color name="accent_material_light">@color/peakaboo_accent</color>
+
+    <!--
+    <color name="primary_material_light_1">@color/peakaboo_toolbar_foreground</color>
     <color name="primary_dark_material_light">#388e3c</color>
     <color name="accent_material_light">#ff5252</color>
+    -->
 </resources>

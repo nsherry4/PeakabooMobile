@@ -4,7 +4,9 @@ import android.support.v4.content.ContextCompat;
 import android.view.MotionEvent;
 
 import com.github.mikephil.charting.charts.LineChart;
+import com.github.mikephil.charting.components.MarkerView;
 import com.github.mikephil.charting.components.XAxis;
+import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
@@ -13,6 +15,7 @@ import com.github.mikephil.charting.highlight.Highlight;
 import com.github.mikephil.charting.listener.ChartTouchListener;
 import com.github.mikephil.charting.listener.OnChartGestureListener;
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
+import com.github.mikephil.charting.utils.MPPointF;
 
 
 import net.sciencestudio.peakaboo.androidui.R;
@@ -48,9 +51,11 @@ public abstract class PlotChart {
     private LineDataSet filteredPlot;
     private LineData datasets;
 
+    private List<Highlight> highlights;
+
     private boolean logged = true;
 
-    PlotChart(PlotActivity main, PlotController controller) {
+    public PlotChart(PlotActivity main, PlotController controller) {
         this.main = main;
         this.controller = controller;
         createPlot();
@@ -117,9 +122,11 @@ public abstract class PlotChart {
         populateLineDataSet(filteredPlot, plotData.filtered);
 
 
-        //Update/Add/Remove Fittings
+        //Update/Add/Remove Fittings & Markings
+        highlights.clear();
         updateFits(fittingLines, plotData.selectionResults, 0xFF000000, 0xFF000000);
         updateFits(proposedLines, plotData.proposedResults, 0xFFA40000, 0xFFA40000);
+        updateHighlights();
 
         //Chart scale
         float maxIntensity = Math.max(plotData.dataset.getAnalysis().maximumIntensity(), plotData.filtered.max());
@@ -177,6 +184,16 @@ public abstract class PlotChart {
 
             ds.setColor(stroke);
             ds.setFillColor(fill);
+
+
+            int channel = results.getParameters().getCalibration().channelFromEnergy(ts.getStrongestTransition().energyValue);
+            Entry strongest = ds.getEntryForIndex(channel);
+            //MPPointF point = chart.getPosition(ds.getEntryForIndex(channel), YAxis.AxisDependency.LEFT);
+
+            //Highlight highlight = new Highlight((float)channel, results.getTotalFit().get(channel), datasets.getIndexOfDataSet(ds));
+            Highlight highlight = new TransitionSeriesHighlight(strongest.getX(), strongest.getY(), datasets.getIndexOfDataSet(ds), ts);
+            highlights.add(highlight);
+
         }
 
         //Remove Fittings
@@ -191,13 +208,35 @@ public abstract class PlotChart {
             }
         }
 
+
+
+
+        chart.invalidate();
+
+    }
+
+    /**
+     * Sets the chart highlights based on the contents of the highlights list
+     */
+    private void updateHighlights() {
+        System.out.println("***********************");
+        System.out.println(highlights);
+        System.out.println(highlights.size());
+        //set highlight to strongest transition
+        chart.highlightValues(highlights.toArray(new Highlight[]{}));
     }
 
     private void createPlot() {
         chart = main.findViewById(R.id.chart);
+        MarkerView marker = new FittingMarkerView(this.main, R.layout.layout_plot_marker);
+        //MarkerView marker = new MarkerView(this.main, R.layout.layout_plot_marker);
+        chart.setMarker(marker);
+        chart.setDrawMarkers(true);
+
         datasets = new LineData();
         fittingLines = new HashMap<>();
         proposedLines = new HashMap<>();
+        highlights = new ArrayList<>();
 
         //axis formatter to un-log the axis values
         chart.getAxisLeft().setValueFormatter( (value, axis) -> {
@@ -222,6 +261,8 @@ public abstract class PlotChart {
         chart.setPinchZoom(false); //TODO: should this be false?
         chart.setDoubleTapToZoomEnabled(true);
         chart.setDragDecelerationEnabled(true);
+        chart.setHighlightPerDragEnabled(false);
+        chart.setHighlightPerTapEnabled(false);
 
         filteredPlot = new LineDataSet(spectrumToEntries(new ISpectrum(2048)), "");
         filteredPlot.setDrawFilled(true);
@@ -231,6 +272,7 @@ public abstract class PlotChart {
         filteredPlot.setColor(0x388E3C, 0xFF);
         filteredPlot.setFillColor(0xFF388E3C);
         filteredPlot.setFillDrawable(ContextCompat.getDrawable(main, R.drawable.plot_green));
+        filteredPlot.setValueTextSize(12f);
         datasets.addDataSet(filteredPlot);
 
 
