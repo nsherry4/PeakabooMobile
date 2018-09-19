@@ -82,6 +82,7 @@ public abstract class PlotChart {
         dataset.setDrawCircles(false);
         dataset.setDrawValues(true);
         dataset.setLineWidth(1f);
+        dataset.setDrawHighlightIndicators(false);
         return dataset;
     }
 
