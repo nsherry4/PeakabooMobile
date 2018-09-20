@@ -32,8 +32,10 @@
         <activity
             android:name=".log.LogViewActivity"
             android:parentActivityName=".plot.PlotActivity"
-            android:theme="@style/PeakabooTheme"></activity>
-        <activity android:name=".map.MapActivity"></activity>
+            android:theme="@style/PeakabooTheme" />
+        <activity android:name=".map.MapActivity" />
+        <activity android:name=".filter.FilterActivity" />
+        <activity android:name=".fitting.FittingActivity"></activity>
     </application>
 
 </manifest>

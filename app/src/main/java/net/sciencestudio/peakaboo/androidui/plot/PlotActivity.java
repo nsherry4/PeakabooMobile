@@ -18,6 +18,7 @@ import android.view.MenuItem;
 import android.widget.Toast;
 
 import net.sciencestudio.autodialog.model.Group;
+import net.sciencestudio.peakaboo.androidui.AppState;
 import net.sciencestudio.peakaboo.androidui.R;
 import net.sciencestudio.peakaboo.androidui.log.LogViewActivity;
 
@@ -45,12 +46,16 @@ import peakaboo.dataset.DatasetReadResult;
 import peakaboo.datasink.plugin.DataSinkPluginManager;
 import peakaboo.datasource.model.DataSource;
 import net.sciencestudio.peakaboo.androidui.AndroidDataFile;
+import net.sciencestudio.peakaboo.androidui.map.MapActivity;
 import net.sciencestudio.peakaboo.androidui.plot.chart.PlotChart;
 import net.sciencestudio.plural.android.ExecutorSetView;
+import net.sciencestudio.plural.android.StreamExecutorView;
 
 import peakaboo.datasource.plugin.DataSourcePluginManager;
 import peakaboo.filter.model.FilterPluginManager;
+import peakaboo.mapping.results.MapResultSet;
 import plural.executor.ExecutorSet;
+import plural.streams.StreamExecutor;
 
 public class PlotActivity extends AppCompatActivity {
 
@@ -75,11 +80,12 @@ public class PlotActivity extends AppCompatActivity {
         PeakabooLog.get().log(Level.INFO, "Starting Plot Activity");
         lookupUI();
 
-        //set up drawer
-        NavigationView drawer = findViewById(R.id.plot_drawer);
-//        drawer.setNavigationItemSelectedListener(menuItem -> {
-//            System.out.println("Item Selected " + menuItem);
-//        });
+        //set up drawer, add menu selection hook
+        NavigationView drawer = findViewById(R.id.plot_nav_drawer);
+        drawer.setNavigationItemSelectedListener(menuItem -> {
+            System.out.println("Item Selected " + menuItem);
+            return onOptionsItemSelected(menuItem);
+        });
 
         setupToolbar();
 
@@ -91,7 +97,7 @@ public class PlotActivity extends AppCompatActivity {
 
 
 
-        PlotState.controller.addListener(event -> {
+        AppState.controller.addListener(event -> {
             chart.update();
         });
 
@@ -156,6 +162,22 @@ public class PlotActivity extends AppCompatActivity {
 
             case R.id.action_rejectfitting:
                 actionRejectProposedFitting();
+                return true;
+
+
+            //DRAWER MENU
+
+            case R.id.action_map:
+
+                //Calculate and Launch Map
+                PeakabooLog.get().log(Level.INFO, "Mapping!");
+                calculateMap();
+                return true;
+
+            case R.id.action_filters:
+                return true;
+
+            case R.id.action_fittings:
                 return true;
         }
 
@@ -263,11 +285,11 @@ public class PlotActivity extends AppCompatActivity {
         }).start();
 
 
-        if (PlotState.controller == null) {
-            PlotState.controller = new PlotController(this.getFilesDir());
+        if (AppState.controller == null) {
+            AppState.controller = new PlotController(this.getFilesDir());
         }
 
-        chart = new PlotChart(this, PlotState.controller) {
+        chart = new PlotChart(this, AppState.controller) {
             @Override
             protected void onLongPress(int channel) {
                 tryFit(channel);
@@ -324,12 +346,12 @@ public class PlotActivity extends AppCompatActivity {
 
 
     private void tryFit(int channel) {
-        List<TransitionSeries> proposals = PlotState.controller.fitting().proposeTransitionSeriesFromChannel(channel, null);
+        List<TransitionSeries> proposals = AppState.controller.fitting().proposeTransitionSeriesFromChannel(channel, null);
         if (proposals == null || proposals.size() == 0) {
             return;
         }
-        PlotState.controller.fitting().clearProposedTransitionSeries();
-        PlotState.controller.fitting().addProposedTransitionSeries(proposals.get(0));
+        AppState.controller.fitting().clearProposedTransitionSeries();
+        AppState.controller.fitting().addProposedTransitionSeries(proposals.get(0));
         showFittingProposalControls();
     }
 
@@ -344,12 +366,12 @@ public class PlotActivity extends AppCompatActivity {
     }
 
     private void actionApproveProposedFitting() {
-        PlotState.controller.fitting().commitProposedTransitionSeries();
+        AppState.controller.fitting().commitProposedTransitionSeries();
         hideFittingProposalControls();
     }
 
     private void actionRejectProposedFitting() {
-        PlotState.controller.fitting().clearProposedTransitionSeries();
+        AppState.controller.fitting().clearProposedTransitionSeries();
         hideFittingProposalControls();
     }
 
@@ -363,7 +385,7 @@ public class PlotActivity extends AppCompatActivity {
 
         PeakabooLog.get().log(Level.INFO, "Loading New Data Set From AndroidDataFiles");
 
-        DataLoader loader = new DataLoader(PlotState.controller, paths) {
+        DataLoader loader = new DataLoader(AppState.controller, paths) {
             @Override
             public void onLoading(ExecutorSet<DatasetReadResult> executorSet) {
                 //TODO:
@@ -384,9 +406,12 @@ public class PlotActivity extends AppCompatActivity {
                 }
                 System.out.println("Success!");
                 //TODO: Hack
-                PlotState.controller.fitting().setMaxEnergy(20.58f);
-                PlotState.controller.fitting().setMinEnergy(0f);
+                AppState.controller.fitting().setMaxEnergy(20.58f);
+                AppState.controller.fitting().setMinEnergy(0f);
+
                 chart.update();
+                chart.resetView();
+
             }
 
             @Override
@@ -431,6 +456,22 @@ public class PlotActivity extends AppCompatActivity {
     private void showLog() {
         Intent i = new Intent(this, LogViewActivity.class);
         startActivity(i);
+    }
+
+    private void calculateMap() {
+        StreamExecutor<MapResultSet> results = AppState.controller.getMapTask();
+        StreamExecutorView dialog = new StreamExecutorView(PlotActivity.this, results);
+        results.addListener(event -> {
+            if (event == StreamExecutor.Event.COMPLETED && results.getResult().isPresent()) {
+                showMap(results.getResult().get());
+            }
+        });
+    }
+
+    private void showMap(MapResultSet maps) {
+        Intent mapIntent = new Intent(PlotActivity.this, MapActivity.class);
+        AppState.mapresults = maps;
+        PlotActivity.this.startActivity(mapIntent);
     }
 
 }

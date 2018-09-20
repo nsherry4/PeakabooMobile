@@ -3,7 +3,7 @@
 
     <item
         android:id="@+id/action_filters"
-        android:orderInCategory="170"
+        android:orderInCategory="100"
         android:title="@string/action_filters"
         android:visible="true"
         android:enabled="false"
@@ -11,7 +11,7 @@
 
     <item
         android:id="@+id/action_fittings"
-        android:orderInCategory="170"
+        android:orderInCategory="110"
         android:title="@string/action_fittings"
         android:visible="true"
         android:enabled="false"
@@ -19,10 +19,10 @@
 
     <item
         android:id="@+id/action_map"
-        android:orderInCategory="170"
+        android:orderInCategory="120"
         android:title="@string/action_map"
         android:visible="true"
-        android:enabled="false"
+        android:enabled="true"
         />
 
 </menu>

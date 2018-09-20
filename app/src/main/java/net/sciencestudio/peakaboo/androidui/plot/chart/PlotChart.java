@@ -1,5 +1,6 @@
 package net.sciencestudio.peakaboo.androidui.plot.chart;
 
+import android.os.Handler;
 import android.support.v4.content.ContextCompat;
 import android.view.MotionEvent;
 
@@ -141,7 +142,17 @@ public abstract class PlotChart {
 
         chart.invalidate();
 
+
     }
+
+    public void resetView() {
+        new Handler().post(() -> {
+            chart.resetViewPortOffsets();
+            chart.resetZoom();
+        });
+
+    }
+
 
     private void updateEmpty() {
 
@@ -373,5 +384,6 @@ public abstract class PlotChart {
 
 
     protected abstract void onLongPress(int channel);
+
 
 }

@@ -4,13 +4,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".map.MapActivity">
-
-    <ca.hss.heatmaplib.HeatMap
-        android:id="@+id/map_heatmap"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:minOpacity="0"
-        app:maxOpacity="255" />
+    tools:context=".fitting.FittingActivity">
 
 </android.support.constraint.ConstraintLayout>
