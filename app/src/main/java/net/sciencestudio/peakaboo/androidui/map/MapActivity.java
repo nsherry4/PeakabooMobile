@@ -1,46 +1,31 @@
 package net.sciencestudio.peakaboo.androidui.map;
 
-import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
-import android.net.Uri;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.ArrayMap;
+import android.support.v7.app.AppCompatActivity;
 import android.widget.ImageView;
 
 import net.sciencestudio.peakaboo.androidui.AppState;
 import net.sciencestudio.peakaboo.androidui.R;
 import net.sciencestudio.scidraw.backend.android.AndroidSurface;
-import net.sciencestudio.scidraw.backend.android.AndroidSurfaceFactory;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
 
-import peakaboo.common.PeakabooConfiguration;
+import cyclops.Coord;
+import eventful.EventfulConfig;
 import peakaboo.controller.mapper.MappingController;
 import peakaboo.controller.mapper.data.MapRenderData;
 import peakaboo.controller.mapper.data.MapSetController;
 import peakaboo.controller.mapper.settings.MapRenderSettings;
-import peakaboo.controller.mapper.settings.MapViewSettings;
 import peakaboo.display.map.Mapper;
-import peakaboo.mapping.results.MapResultSet;
-import plural.streams.StreamExecutor;
-import scitypes.Coord;
-import scitypes.GridPerspective;
-import scitypes.Pair;
-import scitypes.Spectrum;
-import scitypes.visualization.SaveableSurface;
-import scitypes.visualization.SurfaceType;
-import scitypes.visualization.palette.palettes.AbstractPalette;
-import scitypes.visualization.palette.palettes.ThermalScalePalette;
+
 
 public class MapActivity extends AppCompatActivity {
 
     private MappingController controller;
     private ImageView view;
+    private Mapper mapper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,6 +33,7 @@ public class MapActivity extends AppCompatActivity {
         setContentView(R.layout.activity_map);
 
         view = findViewById(R.id.map_image);
+        mapper = new Mapper();
 
         //TODO: Check incoming Intent, this may be a reload due to rotation, etc
 
@@ -66,16 +52,30 @@ public class MapActivity extends AppCompatActivity {
         }
 
         update();
+        EventfulConfig.uiThreadRunner.accept(() -> {
+            update();
+        });
 
     }
 
-    private void drawMap(MapRenderData data, MapRenderSettings settings) {
+    private void update() {
 
-        Mapper mapper = new Mapper();
+        //Sometimes the view has size 0? I assume this happens when update() is called before the
+        //view is laid out in the screen
+        int width = Math.max(view.getWidth(), 100);
+        int height = Math.max(view.getHeight(), 100);
 
-        Bitmap bm = Bitmap.createBitmap(view.getWidth(), view.getHeight(), Bitmap.Config.ARGB_8888);
+        System.out.println(width);
+        System.out.println(height);
+        System.out.println("------------");
+
+        MapRenderData data = controller.getMapRenderData();
+        MapRenderSettings settings = controller.getRenderSettings();
+
+        //TODO: Don't create a new bitmap every redraw, create it once and only replace it if the view size changes
+        Bitmap bm = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
         AndroidSurface surface = new AndroidSurface(bm);
-        mapper.draw(data, settings, surface, false, new Coord<>(view.getWidth(), view.getHeight()));
+        mapper.draw(data, settings, surface, new Coord<>(width, height));
 
 //
 //        Bitmap bmp = Bitmap.createBitmap(settings.dataWidth, settings.dataHeight, Bitmap.Config.ARGB_8888, true);
@@ -100,25 +100,5 @@ public class MapActivity extends AppCompatActivity {
 
     }
 
-    private void update() {
-
-        MapRenderData data = controller.getMapRenderData();
-        MapRenderSettings settings = controller.getRenderSettings();
-
-        Spectrum map;
-        switch (settings.mode) {
-
-            case COMPOSITE:
-                drawMap(data, settings);
-                break;
-            case OVERLAY:
-                break;
-            case RATIO:
-                break;
-        }
-
-
-
-    }
 
 }

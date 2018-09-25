@@ -1,12 +1,6 @@
 package net.sciencestudio.peakaboo.androidui.plot.chart;
 
 import android.content.Context;
-import android.graphics.Canvas;
-import android.graphics.Paint;
-import android.graphics.drawable.ShapeDrawable;
-import android.graphics.drawable.shapes.RectShape;
-import android.graphics.drawable.shapes.RoundRectShape;
-import android.graphics.drawable.shapes.Shape;
 import android.widget.TextView;
 
 import com.github.mikephil.charting.components.MarkerView;

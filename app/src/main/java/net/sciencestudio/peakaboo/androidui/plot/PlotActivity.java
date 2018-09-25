@@ -7,6 +7,7 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.Bundle;
 import android.os.Handler;
 import android.provider.OpenableColumns;
 import android.support.design.widget.NavigationView;
@@ -14,16 +15,20 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
 import net.sciencestudio.autodialog.model.Group;
+import net.sciencestudio.peakaboo.androidui.AndroidDataFile;
 import net.sciencestudio.peakaboo.androidui.AppState;
 import net.sciencestudio.peakaboo.androidui.R;
 import net.sciencestudio.peakaboo.androidui.log.LogViewActivity;
+import net.sciencestudio.peakaboo.androidui.map.MapActivity;
+import net.sciencestudio.peakaboo.androidui.plot.chart.PlotChart;
+import net.sciencestudio.plural.android.ExecutorSetView;
+import net.sciencestudio.plural.android.StreamExecutorView;
 
 import java.io.File;
 import java.io.IOException;
@@ -49,13 +54,6 @@ import peakaboo.curvefit.peak.transition.TransitionSeries;
 import peakaboo.dataset.DatasetReadResult;
 import peakaboo.datasink.plugin.DataSinkPluginManager;
 import peakaboo.datasource.model.DataSource;
-import net.sciencestudio.peakaboo.androidui.AndroidDataFile;
-import net.sciencestudio.peakaboo.androidui.map.MapActivity;
-import net.sciencestudio.peakaboo.androidui.plot.chart.PlotChart;
-import net.sciencestudio.plural.android.ExecutorSetView;
-import net.sciencestudio.plural.android.StreamExecutorView;
-import net.sciencestudio.scidraw.backend.android.AndroidSurfaceFactory;
-
 import peakaboo.datasource.plugin.DataSourcePluginManager;
 import peakaboo.filter.model.FilterPluginManager;
 import peakaboo.mapping.results.MapResultSet;
@@ -236,7 +234,7 @@ public class PlotActivity extends AppCompatActivity {
 
 
     private void setupToolbar() {
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
         ActionBar actionbar = getSupportActionBar();
@@ -279,7 +277,6 @@ public class PlotActivity extends AppCompatActivity {
 
         PeakabooConfiguration.compression = false;
         PeakabooConfiguration.diskstore = true;
-        PeakabooConfiguration.surfaceFactory = new AndroidSurfaceFactory();
 
         PeakabooLog.init(new File(this.getFilesDir() + "/Logging/"));
         DataSourcePluginManager.init(new File(this.getFilesDir() + "/Plugins/DataSource/"));
@@ -368,7 +365,9 @@ public class PlotActivity extends AppCompatActivity {
         try {
 
             Path cacheDir = getCacheDir().toPath();
-            Path tempDir = Files.createTempDirectory(cacheDir, "Temp");
+            //TODO: Implement a cleanup method which checks for older dataset folders and clears them?
+            Path tempDir = Files.createTempDirectory(cacheDir, "DS-Temp");
+
             List<AndroidDataFile> datafiles = new ArrayList<>();
 
             for (Uri uri : uris) {
@@ -383,6 +382,7 @@ public class PlotActivity extends AppCompatActivity {
 
                 AndroidDataFile datafile = new AndroidDataFile(afd, filename, tempDir);
                 datafiles.add(datafile);
+                cursor.close();
 
             }
 

@@ -1,7 +1,5 @@
 package net.sciencestudio.peakaboo.androidui;
 
-import peakaboo.controller.mapper.MappingController;
-import peakaboo.controller.mapper.data.MapSetController;
 import peakaboo.controller.plotter.PlotController;
 import peakaboo.controller.plotter.data.DataLoader;
 import peakaboo.dataset.DatasetReadResult;

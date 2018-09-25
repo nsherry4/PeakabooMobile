@@ -1,7 +1,7 @@
 package net.sciencestudio.peakaboo.androidui.fitting;
 
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 
 import net.sciencestudio.peakaboo.androidui.R;
 

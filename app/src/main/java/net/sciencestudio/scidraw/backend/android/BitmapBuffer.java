@@ -1,10 +1,9 @@
 package net.sciencestudio.scidraw.backend.android;
 
 import android.graphics.Bitmap;
-import android.graphics.Canvas;
 
-import scitypes.visualization.Buffer;
-import scitypes.visualization.palette.PaletteColour;
+import cyclops.visualization.Buffer;
+import cyclops.visualization.palette.PaletteColour;
 
 public class BitmapBuffer extends AndroidSurface implements Buffer {
 

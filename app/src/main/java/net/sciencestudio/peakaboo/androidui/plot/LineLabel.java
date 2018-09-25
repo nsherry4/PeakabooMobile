@@ -4,8 +4,6 @@ import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.formatter.IValueFormatter;
 import com.github.mikephil.charting.utils.ViewPortHandler;
 
-import peakaboo.curvefit.curve.fitting.EnergyCalibration;
-import peakaboo.curvefit.peak.transition.Transition;
 import peakaboo.curvefit.peak.transition.TransitionSeries;
 
 public class LineLabel implements IValueFormatter {

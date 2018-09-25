@@ -13,12 +13,15 @@ import android.graphics.Typeface;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.HashMap;
+import java.util.Map;
 
-import scitypes.visualization.Buffer;
-import scitypes.visualization.SaveableSurface;
-import scitypes.visualization.Surface;
-import scitypes.visualization.palette.PaletteColour;
-import scitypes.visualization.template.SurfaceTemplate;
+import cyclops.visualization.Buffer;
+import cyclops.visualization.SaveableSurface;
+import cyclops.visualization.Surface;
+import cyclops.visualization.palette.PaletteColour;
+import cyclops.visualization.template.SurfaceTemplate;
+
 
 public class AndroidSurface implements SaveableSurface {
 
@@ -28,11 +31,14 @@ public class AndroidSurface implements SaveableSurface {
     private Paint paint;
     private CompositeModes compositeMode;
 
+    private Map<Integer, Paint> paintSaveStack = new HashMap<>();
+
     public AndroidSurface(Bitmap bm) {
         this.bm = bm;
         this.canvas = new Canvas(bm);
         path = new Path();
         paint = new Paint();
+
 
         setLineStyle(1f, EndCap.ROUND, LineJoin.ROUND);
         setAntialias(true);
@@ -57,7 +63,7 @@ public class AndroidSurface implements SaveableSurface {
 
     @Override
     public void addShape(SurfaceTemplate template) {
-        template.apply(this   );
+        template.apply(this);
     }
 
     @Override
@@ -174,7 +180,7 @@ public class AndroidSurface implements SaveableSurface {
     @Override
     public float getFontHeight() {
         Paint.FontMetrics m = paint.getFontMetrics();
-        return m.ascent + m.descent + m.leading;
+        return -m.ascent + m.descent + m.leading;
     }
 
     @Override
@@ -184,7 +190,7 @@ public class AndroidSurface implements SaveableSurface {
 
     @Override
     public float getFontAscent() {
-        return paint.getFontMetrics().ascent;
+        return -paint.getFontMetrics().ascent;
     }
 
     @Override
@@ -194,21 +200,28 @@ public class AndroidSurface implements SaveableSurface {
 
     @Override
     public void save() {
-        canvas.save();
+        saveWithMarker();
     }
 
     @Override
     public int saveWithMarker() {
-        return canvas.save();
+        int i = canvas.save();
+        paintSaveStack.put(i, paint);
+        paint = new Paint(paint);
+        System.out.println("SAVE " + i);
+        return i;
     }
 
     @Override
     public void restoreFromMarker(int i) {
         canvas.restoreToCount(i);
+        paint = paintSaveStack.remove(i);
     }
 
     @Override
     public void restore() {
+        //savecount seems to report 1 higher than the last saved marker
+        paint = paintSaveStack.remove(canvas.getSaveCount()-1);
         canvas.restore();
     }
 
@@ -277,7 +290,10 @@ public class AndroidSurface implements SaveableSurface {
     @Override
     public void compose(Buffer buffer, int x, int y, float scale) {
         Bitmap bm = (Bitmap) buffer.getImageSource();
-        canvas.drawBitmap(bm, x, y, paint);
+        canvas.drawBitmap(bm,
+                new Rect(x, y, x+bm.getWidth(), y+bm.getHeight()),
+                new Rect(x, y, (int)(x+bm.getWidth()*scale), (int)(y+bm.getHeight()*scale)),
+                paint);
     }
 
     @Override
