@@ -16,9 +16,9 @@ import com.github.mikephil.charting.highlight.Highlight;
 import com.github.mikephil.charting.listener.ChartTouchListener;
 import com.github.mikephil.charting.listener.OnChartGestureListener;
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
-import com.github.mikephil.charting.utils.MPPointF;
 
 
+import net.sciencestudio.peakaboo.androidui.AppState;
 import net.sciencestudio.peakaboo.androidui.R;
 import net.sciencestudio.peakaboo.androidui.plot.LineLabel;
 import net.sciencestudio.peakaboo.androidui.plot.PlotActivity;
@@ -32,6 +32,7 @@ import java.util.stream.Collectors;
 import peakaboo.controller.plotter.PlotController;
 import peakaboo.controller.plotter.view.PlotData;
 import peakaboo.controller.plotter.view.PlotSettings;
+import peakaboo.curvefit.curve.fitting.EnergyCalibration;
 import peakaboo.curvefit.curve.fitting.FittingResult;
 import peakaboo.curvefit.curve.fitting.FittingResultSet;
 import peakaboo.curvefit.peak.transition.TransitionSeries;
@@ -123,12 +124,21 @@ public abstract class PlotChart {
         //Update Signal
         populateLineDataSet(filteredPlot, plotData.filtered);
 
-
         //Update/Add/Remove Fittings & Markings
         highlights.clear();
         updateFits(fittingLines, plotData.selectionResults, 0xFF000000, 0xFF000000);
         updateFits(proposedLines, plotData.proposedResults, 0xFFA40000, 0xFFA40000);
-        updateHighlights();
+        updateMarkings(fittingLines, plotData.selectionResults);
+        updateMarkings(proposedLines, plotData.proposedResults);
+        for (TransitionSeries selected : AppState.controller.fitting().getHighlightedTransitionSeries()) {
+            if (!fittingLines.containsKey(selected)) {
+                continue;
+            }
+            LineDataSet selectedDs = fittingLines.get(selected);
+            selectedDs.setColor(0xff01579B);
+            selectedDs.setFillColor(0xff0288D1);
+        }
+        updateMarkings();
 
         //Chart scale
         float maxIntensity = Math.max(plotData.dataset.getAnalysis().maximumIntensity(), plotData.filtered.max());
@@ -197,15 +207,6 @@ public abstract class PlotChart {
             ds.setColor(stroke);
             ds.setFillColor(fill);
 
-
-            int channel = results.getParameters().getCalibration().channelFromEnergy(ts.getStrongestTransition().energyValue);
-            Entry strongest = ds.getEntryForIndex(channel);
-            //MPPointF point = chart.getPosition(ds.getEntryForIndex(channel), YAxis.AxisDependency.LEFT);
-
-            //Highlight highlight = new Highlight((float)channel, results.getTotalFit().get(channel), datasets.getIndexOfDataSet(ds));
-            Highlight highlight = new TransitionSeriesHighlight(strongest.getX(), strongest.getY(), datasets.getIndexOfDataSet(ds), ts);
-            highlights.add(highlight);
-
         }
 
         //Remove Fittings
@@ -221,16 +222,28 @@ public abstract class PlotChart {
         }
 
 
-
-
         chart.invalidate();
 
+    }
+
+    public void updateMarkings(Map<TransitionSeries, LineDataSet> lines, FittingResultSet results) {
+        //Update/Add Highlights
+        for (FittingResult fit : results.getFits()) {
+            TransitionSeries ts = fit.getTransitionSeries();
+            LineDataSet ds = lines.get(ts);
+
+            int channel = results.getParameters().getCalibration().channelFromEnergy(ts.getStrongestTransition().energyValue);
+            Entry strongest = ds.getEntryForIndex(channel);
+            Highlight highlight = new TransitionSeriesHighlight(strongest.getX(), strongest.getY(), datasets.getIndexOfDataSet(ds), ts);
+            highlights.add(highlight);
+
+        }
     }
 
     /**
      * Sets the chart highlights based on the contents of the highlights list
      */
-    private void updateHighlights() {
+    private void updateMarkings() {
         System.out.println("***********************");
         System.out.println(highlights);
         System.out.println(highlights.size());
@@ -266,6 +279,16 @@ public abstract class PlotChart {
             return SigDigits.roundFloatTo(value, 0);
         });
 
+        chart.getXAxis().setValueFormatter( (value, axis) -> {
+            EnergyCalibration e = AppState.controller.fitting().getEnergyCalibration();
+            if (e.isZero()) {
+                return "";
+            } else {
+                float energy = e.energyFromChannel((int)value);
+                return SigDigits.roundFloatTo(energy, 0);
+            }
+        });
+
         chart.getXAxis().setPosition(XAxis.XAxisPosition.BOTTOM);
         chart.getXAxis().setDrawGridLines(false);
 
@@ -275,10 +298,11 @@ public abstract class PlotChart {
         chart.setScaleXEnabled(true);
         chart.setScaleYEnabled(false);
         chart.setPinchZoom(false); //TODO: should this be false?
-        chart.setDoubleTapToZoomEnabled(true);
+        chart.setDoubleTapToZoomEnabled(false);
         chart.setDragDecelerationEnabled(true);
         chart.setHighlightPerDragEnabled(false);
         chart.setHighlightPerTapEnabled(false);
+
 
         filteredPlot = new LineDataSet(spectrumToEntries(new ISpectrum(2048)), "");
         filteredPlot.setDrawFilled(true);
@@ -289,6 +313,7 @@ public abstract class PlotChart {
         filteredPlot.setFillColor(0xFF388E3C);
         filteredPlot.setFillDrawable(ContextCompat.getDrawable(main, R.drawable.plot_green));
         filteredPlot.setValueTextSize(12f);
+        filteredPlot.setDrawHighlightIndicators(false);
         datasets.addDataSet(filteredPlot);
 
 
@@ -317,7 +342,7 @@ public abstract class PlotChart {
 
 
                 Entry e = chart.getEntryByTouchPoint(me.getX(), me.getY());
-                onLongPress((int)e.getX());
+                onRequestFitting((int)e.getX());
                 System.out.println("*******************");
                 System.out.println("X = " + me.getX());
                 System.out.println("rawX = " + me.getRawX());
@@ -335,6 +360,28 @@ public abstract class PlotChart {
 
             @Override
             public void onChartSingleTapped(MotionEvent me) {
+                Entry e = chart.getEntryByTouchPoint(me.getX(), me.getY());
+                int x = (int) e.getX();
+                System.out.println(x);
+
+                float bestValue = 1f;
+                FittingResult bestFit = null;
+
+                if (AppState.controller.fitting().getFittingSelectionResults() == null) {
+                    return;
+                }
+
+                for (FittingResult fit : AppState.controller.fitting().getFittingSelectionResults()) {
+                    float value = fit.getFit().get(x);
+                    if (value > bestValue) {
+                        bestValue = value;
+                        bestFit = fit;
+                    }
+                }
+
+                onSelectFitting(bestFit);
+
+                update();
 
             }
 
@@ -358,8 +405,6 @@ public abstract class PlotChart {
             @Override
             public void onValueSelected(Entry e, Highlight h) {
 
-                System.out.println("Something Selected");
-                //onLongPress((int)e.getX());
             }
 
             @Override
@@ -383,7 +428,8 @@ public abstract class PlotChart {
     }
 
 
-    protected abstract void onLongPress(int channel);
+    protected abstract void onRequestFitting(int channel);
+    protected abstract void onSelectFitting(FittingResult fitting);
 
 
 }

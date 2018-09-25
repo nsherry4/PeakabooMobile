@@ -6,11 +6,13 @@
     android:layout_height="match_parent"
     tools:context=".map.MapActivity">
 
-    <ca.hss.heatmaplib.HeatMap
-        android:id="@+id/map_heatmap"
+    <ImageView
+        android:id="@+id/map_image"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:minOpacity="0"
-        app:maxOpacity="255" />
-
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@color/colorPrimary" />
 </android.support.constraint.ConstraintLayout>

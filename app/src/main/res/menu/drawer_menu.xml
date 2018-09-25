@@ -2,27 +2,35 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item
-        android:id="@+id/action_filters"
-        android:orderInCategory="100"
-        android:title="@string/action_filters"
+        android:id="@+id/action_energy"
+        android:orderInCategory="90"
+        android:title="@string/action_energy"
         android:visible="true"
         android:enabled="false"
         />
 
     <item
         android:id="@+id/action_fittings"
-        android:orderInCategory="110"
+        android:enabled="true"
+        android:orderInCategory="100"
         android:title="@string/action_fittings"
-        android:visible="true"
+        android:visible="false" />
+
+    <item
+        android:id="@+id/action_filters"
         android:enabled="false"
-        />
+        android:orderInCategory="110"
+        android:title="@string/action_filters"
+        android:visible="true" />
 
     <item
         android:id="@+id/action_map"
         android:orderInCategory="120"
         android:title="@string/action_map"
         android:visible="true"
-        android:enabled="true"
+        android:enabled="false"
         />
+
+
 
 </menu>

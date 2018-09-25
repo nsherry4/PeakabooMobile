@@ -38,7 +38,7 @@ public class ExecutorSetView extends ProgressDialog {
     private void init(ExecutorSet<?> executors) {
         this.executors = executors;
 
-        this.setCancelable(true);
+        this.setCancelable(false);
         this.setTitle(executors.getDescription());
 
         for (PluralExecutor executor : executors) {

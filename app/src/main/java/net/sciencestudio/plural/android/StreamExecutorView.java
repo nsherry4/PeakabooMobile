@@ -3,15 +3,11 @@ package net.sciencestudio.plural.android;
 import android.app.ProgressDialog;
 import android.content.Context;
 
-import plural.executor.ExecutorSet;
-import plural.executor.ExecutorState;
-import plural.executor.PluralExecutor;
 import plural.streams.StreamExecutor;
-import plural.streams.StreamExecutorSet;
 
 public class StreamExecutorView extends ProgressDialog {
 
-    private StreamExecutor<?> executors;
+    private StreamExecutor<?> executor;
 
     /**
      * Creates a Progress dialog.
@@ -20,7 +16,7 @@ public class StreamExecutorView extends ProgressDialog {
      */
     public StreamExecutorView(Context context, StreamExecutor<?> executor) {
         super(context);
-        init(executors);
+        init(executor);
     }
 
     /**
@@ -31,19 +27,19 @@ public class StreamExecutorView extends ProgressDialog {
      *                this dialog, or {@code 0} to use the parent
      *                {@code context}'s default alert dialog theme
      */
-    public StreamExecutorView(Context context, int theme, StreamExecutor<?> executors) {
+    public StreamExecutorView(Context context, int theme, StreamExecutor<?> executor) {
         super(context, theme);
-        init(executors);
+        init(executor);
     }
 
 
-    private void init(StreamExecutor<?> executors) {
-        this.executors = executors;
+    private void init(StreamExecutor<?> executor) {
+        this.executor = executor;
 
-        this.setCancelable(true);
-        this.setTitle(executors.getName());
+        this.setCancelable(false);
+        this.setTitle(executor.getName());
 
-        executors.addListener((StreamExecutor.Event event) -> {
+        executor.addListener((StreamExecutor.Event event) -> {
             switch (event) {
                 case COMPLETED:
                     this.hide();;
@@ -61,12 +57,12 @@ public class StreamExecutorView extends ProgressDialog {
 
     private void update() {
 
-        if (executors.getSize() <= 0) {
+        if (executor.getSize() <= 0) {
             this.setIndeterminate(true);
         } else {
             this.setIndeterminate(false);
-            this.setProgress(executors.getCount());
-            this.setMax(executors.getSize());
+            this.setProgress(executor.getCount());
+            this.setMax(executor.getSize());
         }
     }
 

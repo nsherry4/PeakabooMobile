@@ -14,7 +14,9 @@
     <string name="action_help">Help</string>
     <string name="action_about">About</string>
     <string name="toast_newersession">Session is from a newer version of Peakaboo, some settings may not load correctly.</string>
-    <string name="action_filters">Filters</string>
-    <string name="action_fittings">Fittings</string>
-    <string name="action_map">Map</string>
+    <string name="action_filters">Data Filters</string>
+    <string name="action_fittings">Peak Fittings</string>
+    <string name="action_map">Map Fittings</string>
+    <string name="action_energy">Energy Calibration</string>
+    <string name="close">Close</string>
 </resources>

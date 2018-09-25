@@ -1,8 +1,11 @@
 package net.sciencestudio.peakaboo.androidui.plot;
 
+import android.app.ActivityManager;
 import android.content.Intent;
 import android.content.res.AssetFileDescriptor;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Handler;
 import android.provider.OpenableColumns;
@@ -39,6 +42,7 @@ import peakaboo.common.PeakabooLog;
 import peakaboo.common.Version;
 import peakaboo.controller.plotter.PlotController;
 import peakaboo.controller.plotter.data.DataLoader;
+import peakaboo.curvefit.curve.fitting.FittingResult;
 import peakaboo.curvefit.peak.table.PeakTable;
 import peakaboo.curvefit.peak.table.SerializedPeakTable;
 import peakaboo.curvefit.peak.transition.TransitionSeries;
@@ -50,6 +54,7 @@ import net.sciencestudio.peakaboo.androidui.map.MapActivity;
 import net.sciencestudio.peakaboo.androidui.plot.chart.PlotChart;
 import net.sciencestudio.plural.android.ExecutorSetView;
 import net.sciencestudio.plural.android.StreamExecutorView;
+import net.sciencestudio.scidraw.backend.android.AndroidSurfaceFactory;
 
 import peakaboo.datasource.plugin.DataSourcePluginManager;
 import peakaboo.filter.model.FilterPluginManager;
@@ -69,7 +74,7 @@ public class PlotActivity extends AppCompatActivity {
 
     //UI Lookups
     private DrawerLayout mDrawerLayout;
-    private MenuItem approveFitting, rejectFitting;
+    private MenuItem approveFitting, rejectFitting, energyCalibration, mapFittings;
 
 
 
@@ -78,14 +83,14 @@ public class PlotActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         PeakabooLog.get().log(Level.INFO, "Starting Plot Activity");
-        lookupUI();
 
-        //set up drawer, add menu selection hook
-        NavigationView drawer = findViewById(R.id.plot_nav_drawer);
-        drawer.setNavigationItemSelectedListener(menuItem -> {
-            System.out.println("Item Selected " + menuItem);
-            return onOptionsItemSelected(menuItem);
-        });
+        Bitmap bm = BitmapFactory.decodeResource(getResources(), R.mipmap.ic_peakaboo);
+        ActivityManager.TaskDescription taskDescription = new ActivityManager.TaskDescription(getString(R.string.app_name), bm, getColor(R.color.peakaboo_primary_dark));
+        PlotActivity.this.setTaskDescription(taskDescription);
+
+        mDrawerLayout = findViewById(R.id.drawer_layout);
+
+
 
         setupToolbar();
 
@@ -95,13 +100,25 @@ public class PlotActivity extends AppCompatActivity {
 
         processIntentOrRestore();
 
-
+        //set up drawer, add menu selection hook
+        NavigationView drawer = findViewById(R.id.plot_nav_drawer);
+        drawer.bringToFront();
+        drawer.setNavigationItemSelectedListener(menuItem -> {
+            mDrawerLayout.closeDrawers();
+            return onOptionsItemSelected(menuItem);
+        });
+        energyCalibration = drawer.getMenu().findItem(R.id.action_energy);
+        mapFittings = drawer.getMenu().findItem(R.id.action_map);
 
         AppState.controller.addListener(event -> {
-            chart.update();
+            updateUI();
         });
 
-        chart.update();
+        updateUI();
+
+        if (AppState.dataloader != null && AppState.dataloaderjob != null) {
+            showDataLoaderProgress();
+        }
 
     }
 
@@ -114,6 +131,8 @@ public class PlotActivity extends AppCompatActivity {
         approveFitting = menu.findItem(R.id.action_approvefitting);
         rejectFitting = menu.findItem(R.id.action_rejectfitting);
         System.out.println("-------> " + mDrawerLayout);
+
+
 
         return true;
     }
@@ -157,11 +176,11 @@ public class PlotActivity extends AppCompatActivity {
                 return true;
 
             case R.id.action_approvefitting:
-                actionApproveProposedFitting();
+                actionApproveFitting();
                 return true;
 
             case R.id.action_rejectfitting:
-                actionRejectProposedFitting();
+                actionRejectFitting();
                 return true;
 
 
@@ -178,6 +197,10 @@ public class PlotActivity extends AppCompatActivity {
                 return true;
 
             case R.id.action_fittings:
+                return true;
+
+            case R.id.action_energy:
+                showEnergyCalibration();
                 return true;
         }
 
@@ -211,10 +234,6 @@ public class PlotActivity extends AppCompatActivity {
 
     }
 
-
-    private void lookupUI() {
-        mDrawerLayout = findViewById(R.id.drawer_layout);
-    }
 
     private void setupToolbar() {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -260,6 +279,7 @@ public class PlotActivity extends AppCompatActivity {
 
         PeakabooConfiguration.compression = false;
         PeakabooConfiguration.diskstore = true;
+        PeakabooConfiguration.surfaceFactory = new AndroidSurfaceFactory();
 
         PeakabooLog.init(new File(this.getFilesDir() + "/Logging/"));
         DataSourcePluginManager.init(new File(this.getFilesDir() + "/Plugins/DataSource/"));
@@ -291,11 +311,43 @@ public class PlotActivity extends AppCompatActivity {
 
         chart = new PlotChart(this, AppState.controller) {
             @Override
-            protected void onLongPress(int channel) {
+            protected void onRequestFitting(int channel) {
                 tryFit(channel);
+            }
+
+            @Override
+            protected void onSelectFitting(FittingResult fitting) {
+                onFittingSelected(fitting);
             }
         };
     }
+
+    private void updateUI() {
+
+        if (energyCalibration != null) energyCalibration.setEnabled(true);//AppState.controller.data().hasDataSet());
+        if (mapFittings != null) mapFittings.setEnabled(
+                AppState.controller.data().hasDataSet() &&
+                !AppState.controller.fitting().getFittingSelections().isEmpty() &&
+                !AppState.controller.fitting().getEnergyCalibration().isZero()
+        );
+
+        if (!AppState.controller.fitting().getProposedTransitionSeries().isEmpty()) {
+            if (approveFitting != null) approveFitting.setVisible(true);
+            if (rejectFitting != null) rejectFitting.setVisible(true);
+        } else if (!AppState.controller.fitting().getHighlightedTransitionSeries().isEmpty()) {
+            if (approveFitting != null) approveFitting.setVisible(false);
+            if (rejectFitting != null) rejectFitting.setVisible(true);
+        } else {
+            if (approveFitting != null) approveFitting.setVisible(false);
+            if (rejectFitting != null) rejectFitting.setVisible(false);
+        }
+
+        chart.update();
+    }
+
+
+
+
 
     private void selectDataSet() {
 
@@ -352,28 +404,39 @@ public class PlotActivity extends AppCompatActivity {
         }
         AppState.controller.fitting().clearProposedTransitionSeries();
         AppState.controller.fitting().addProposedTransitionSeries(proposals.get(0));
-        showFittingProposalControls();
+        updateUI();
     }
 
-    private void showFittingProposalControls() {
-        approveFitting.setVisible(true);
-        rejectFitting.setVisible(true);
-    }
-
-    private void hideFittingProposalControls() {
-        approveFitting.setVisible(false);
-        rejectFitting.setVisible(false);
-    }
-
-    private void actionApproveProposedFitting() {
+    private void actionApproveFitting() {
         AppState.controller.fitting().commitProposedTransitionSeries();
-        hideFittingProposalControls();
+        updateUI();
     }
 
-    private void actionRejectProposedFitting() {
-        AppState.controller.fitting().clearProposedTransitionSeries();
-        hideFittingProposalControls();
+    private void actionRejectFitting() {
+        if (AppState.controller.fitting().getProposedTransitionSeries().isEmpty()) {
+            //if no proposals, this is shown for a selected fitting
+            List<TransitionSeries> selected = AppState.controller.fitting().getHighlightedTransitionSeries();
+            for (TransitionSeries ts : selected) {
+                AppState.controller.fitting().removeTransitionSeries(ts);
+            }
+            AppState.controller.fitting().setHighlightedTransitionSeries(Collections.emptyList());
+        } else {
+            AppState.controller.fitting().clearProposedTransitionSeries();
+        }
+
+        updateUI();
     }
+
+    private void onFittingSelected(FittingResult fitting) {
+        AppState.controller.fitting().clearProposedTransitionSeries();
+        AppState.controller.fitting().setHighlightedTransitionSeries(Collections.emptyList());
+        if (fitting != null) {
+            AppState.controller.fitting().setHighlightedTransitionSeries(Collections.singletonList(fitting.getTransitionSeries()));
+        }
+        updateUI();
+    }
+
+
 
     private void loadDataSet(List<AndroidDataFile> datafiles) throws IOException {
 
@@ -385,13 +448,12 @@ public class PlotActivity extends AppCompatActivity {
 
         PeakabooLog.get().log(Level.INFO, "Loading New Data Set From AndroidDataFiles");
 
-        DataLoader loader = new DataLoader(AppState.controller, paths) {
+        AppState.dataloader = new DataLoader(AppState.controller, paths) {
             @Override
             public void onLoading(ExecutorSet<DatasetReadResult> executorSet) {
                 //TODO:
-                PeakabooLog.get().log(Level.INFO, "Showing Progress Dialog");
-                ExecutorSetView progress = new ExecutorSetView(PlotActivity.this, executorSet);
-                progress.show();
+                AppState.dataloaderjob = executorSet;
+                showDataLoaderProgress();
             }
 
             @Override
@@ -408,8 +470,11 @@ public class PlotActivity extends AppCompatActivity {
                 //TODO: Hack
                 AppState.controller.fitting().setMaxEnergy(20.58f);
                 AppState.controller.fitting().setMinEnergy(0f);
+                AppState.dataloader = null;
+                AppState.dataloaderjob = null;
 
-                chart.update();
+                updateUI();
+
                 chart.resetView();
 
             }
@@ -449,7 +514,13 @@ public class PlotActivity extends AppCompatActivity {
             }
         };
 
-        loader.load();
+        AppState.dataloader.load();
+    }
+
+    private void showDataLoaderProgress() {
+        PeakabooLog.get().log(Level.INFO, "Showing Progress Dialog");
+        ExecutorSetView progress = new ExecutorSetView(PlotActivity.this, AppState.dataloaderjob);
+        progress.show();
     }
 
 
@@ -460,18 +531,27 @@ public class PlotActivity extends AppCompatActivity {
 
     private void calculateMap() {
         StreamExecutor<MapResultSet> results = AppState.controller.getMapTask();
+        System.out.println("RESULTS: " + results);
         StreamExecutorView dialog = new StreamExecutorView(PlotActivity.this, results);
         results.addListener(event -> {
             if (event == StreamExecutor.Event.COMPLETED && results.getResult().isPresent()) {
                 showMap(results.getResult().get());
             }
         });
+        results.start();
     }
 
     private void showMap(MapResultSet maps) {
         Intent mapIntent = new Intent(PlotActivity.this, MapActivity.class);
         AppState.mapresults = maps;
         PlotActivity.this.startActivity(mapIntent);
+    }
+
+    private void showEnergyCalibration() {
+
+        EnergyCalibrationDialogFragment dialogFragment = new EnergyCalibrationDialogFragment();
+        dialogFragment.show(getSupportFragmentManager(), "energy");
+
     }
 
 }
