@@ -13,6 +13,7 @@ import plural.executor.PluralExecutor;
 public class ExecutorSetView extends ProgressDialog {
 
     private ExecutorSet<?> executors;
+    private int percent = 0;
 
     /**
      * Creates a Progress dialog.
@@ -75,13 +76,20 @@ public class ExecutorSetView extends ProgressDialog {
         if (executor.getState() == ExecutorState.STALLED) {
             //this.setProgressStyle(ProgressDialog.STYLE_SPINNER);
             //this.setIndeterminate(true);
-            this.setProgress(0);
+            if (this.getProgress() != 0) {
+                this.setProgress(0);
+            }
         } else {
-            this.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-            this.setMax(executor.getWorkUnits());
-            this.setProgress(executor.getWorkUnitsCompleted());
-            this.setIndeterminate(false);
-            this.show();
+            int count = executor.getWorkUnitsCompleted();
+            int size = executor.getWorkUnits();
+            int newPercent = (int)(((float)count)/((float)size) * 100);
+            if (percent != newPercent) {
+                this.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+                this.setMax(executor.getWorkUnits());
+                this.setProgress(executor.getWorkUnitsCompleted());
+                this.setIndeterminate(false);
+                percent = newPercent;
+            }
         }
     }
 

@@ -1,24 +1,19 @@
 package net.sciencestudio.peakaboo.androidui.map;
 
-import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.Paint;
 import android.os.Bundle;
+import android.support.constraint.ConstraintLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.widget.HorizontalScrollView;
-import android.widget.ImageView;
 import android.widget.ScrollView;
 
 import net.sciencestudio.peakaboo.androidui.AppState;
 import net.sciencestudio.peakaboo.androidui.R;
-import net.sciencestudio.scidraw.backend.android.AndroidBitmapSurface;
 
 import java.util.ArrayList;
 
 import cyclops.Coord;
 import peakaboo.controller.mapper.MappingController;
 import peakaboo.controller.mapper.data.MapSetController;
-import peakaboo.display.map.Mapper;
 
 
 public class MapActivity extends AppCompatActivity {
@@ -48,11 +43,9 @@ public class MapActivity extends AppCompatActivity {
         }
 
 
-        ScrollView vscroll = findViewById(R.id.map_vscroll);
-        HorizontalScrollView hscroll = findViewById(R.id.map_hscroll);
-        hscroll.removeAllViews();
+        ConstraintLayout layout = findViewById(R.id.map_top_layout);
         view = new MapView(this);
-        hscroll.addView(view);
+        layout.addView(view);
 
 
 

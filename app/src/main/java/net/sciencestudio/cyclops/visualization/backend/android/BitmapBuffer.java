@@ -1,4 +1,4 @@
-package net.sciencestudio.scidraw.backend.android;
+package net.sciencestudio.cyclops.visualization.backend.android;
 
 import android.graphics.Bitmap;
 

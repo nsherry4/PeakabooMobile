@@ -1,25 +1,13 @@
-package net.sciencestudio.scidraw.backend.android;
+package net.sciencestudio.cyclops.visualization.backend.android;
 
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
-import android.graphics.LinearGradient;
-import android.graphics.Paint;
-import android.graphics.Path;
-import android.graphics.PorterDuff;
-import android.graphics.PorterDuffXfermode;
-import android.graphics.Rect;
-import android.graphics.Shader;
-import android.graphics.Typeface;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.HashMap;
-import java.util.Map;
 
-import cyclops.visualization.Buffer;
 import cyclops.visualization.SaveableSurface;
 import cyclops.visualization.Surface;
-import cyclops.visualization.palette.PaletteColour;
 
 
 public class AndroidBitmapSurface extends AbstractAndroidSurface implements SaveableSurface {

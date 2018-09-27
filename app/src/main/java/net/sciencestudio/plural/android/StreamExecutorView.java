@@ -8,7 +8,7 @@ import plural.streams.StreamExecutor;
 public class StreamExecutorView extends ProgressDialog {
 
     private StreamExecutor<?> executor;
-
+    private int percent = 0;
     /**
      * Creates a Progress dialog.
      *
@@ -58,11 +58,20 @@ public class StreamExecutorView extends ProgressDialog {
     private void update() {
 
         if (executor.getSize() <= 0) {
-            this.setIndeterminate(true);
+            //this.setIndeterminate(true);
+            if (this.getProgress() != 0) {
+                this.setProgress(0);
+            }
         } else {
-            this.setIndeterminate(false);
-            this.setProgress(executor.getCount());
-            this.setMax(executor.getSize());
+            int count = executor.getCount();
+            int size = executor.getSize();
+            int newPercent = count/size;
+            if (percent != newPercent) {
+                this.setIndeterminate(false);
+                this.setProgress(executor.getCount());
+                this.setMax(executor.getSize());
+                percent = newPercent;
+            }
         }
     }
 

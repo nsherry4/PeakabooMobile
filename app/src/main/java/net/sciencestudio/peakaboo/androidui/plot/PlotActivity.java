@@ -136,7 +136,7 @@ public class PlotActivity extends AppCompatActivity {
         rejectFitting = menu.findItem(R.id.action_rejectfitting);
         System.out.println("-------> " + mDrawerLayout);
 
-
+        EventfulConfig.uiThreadRunner.accept(this::updateUI);
 
         return true;
     }
@@ -365,7 +365,7 @@ public class PlotActivity extends AppCompatActivity {
             if (rejectFitting != null) rejectFitting.setVisible(false);
         }
 
-        chart.update();
+        chart.invalidate();
     }
 
 
@@ -498,8 +498,6 @@ public class PlotActivity extends AppCompatActivity {
                 AppState.dataloaderjob = null;
 
                 updateUI();
-
-                chart.resetView();
 
             }
 

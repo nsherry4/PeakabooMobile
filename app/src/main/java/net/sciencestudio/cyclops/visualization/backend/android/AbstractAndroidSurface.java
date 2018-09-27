@@ -1,4 +1,4 @@
-package net.sciencestudio.scidraw.backend.android;
+package net.sciencestudio.cyclops.visualization.backend.android;
 
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -82,7 +82,10 @@ public abstract class AbstractAndroidSurface implements Surface {
 
     @Override
     public void writeText(String s, float x, float y) {
+        Paint.Style style = paint.getStyle();
+        paint.setStyle(Paint.Style.FILL);
         canvas.drawText(s, x, y, paint);
+        paint.setStyle(style);
     }
 
     @Override
