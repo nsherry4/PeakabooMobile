@@ -8,5 +8,11 @@
     android:id="@+id/map_top_layout"
     >
 
+    <net.sciencestudio.peakaboo.androidui.map.CyclopsMapView
+        android:id="@+id/map_chart"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        />
+
 
 </android.support.constraint.ConstraintLayout>

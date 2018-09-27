@@ -40,6 +40,31 @@
             android:theme="@style/PeakabooTheme.AppBarOverlay"
             app:popupTheme="@style/PeakabooTheme.PopupOverlay" />
 
+        <android.support.design.widget.CoordinatorLayout
+            android:id="@+id/plot_main_area"
+            xmlns:android="http://schemas.android.com/apk/res/android"
+            xmlns:app="http://schemas.android.com/apk/res-auto"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <net.sciencestudio.peakaboo.androidui.plot.chart.cyclops.CyclopsPlotView
+                android:id="@+id/plot_chart"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                />
+
+            <android.support.design.widget.FloatingActionButton
+                android:id="@+id/plot_fab"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom|right"
+                android:layout_margin="16dp"
+                android:src="@drawable/ic_action_acceptfitting"
+                app:layout_anchor="@id/plot_chart"
+                app:layout_anchorGravity="bottom|right|end"
+                android:visibility="invisible"/>
+
+        </android.support.design.widget.CoordinatorLayout>
 
         <!--<com.github.mikephil.charting.charts.LineChart-->
             <!--android:id="@+id/chart"-->

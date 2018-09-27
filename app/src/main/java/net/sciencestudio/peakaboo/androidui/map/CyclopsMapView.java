@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
@@ -22,7 +23,7 @@ import peakaboo.display.map.MapRenderData;
 import peakaboo.display.map.MapRenderSettings;
 import peakaboo.display.map.Mapper;
 
-public class MapView extends CyclopsView {
+public class CyclopsMapView extends CyclopsView {
 
     private Mapper mapper;
     private ScaleGestureDetector scaleDetector;
@@ -34,8 +35,8 @@ public class MapView extends CyclopsView {
      * @param context The Context the view is running in, through which it can
      *                access the current theme, resources, etc.
      */
-    public MapView(Context context) {
-        super(context, true, true);
+    public CyclopsMapView(Context context, AttributeSet attributes) {
+        super(context, attributes, true, true);
         mapper = new Mapper();
 
     }

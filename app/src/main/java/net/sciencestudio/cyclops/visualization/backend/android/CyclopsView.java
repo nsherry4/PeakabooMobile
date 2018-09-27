@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
@@ -39,8 +40,8 @@ public abstract class CyclopsView extends View {
      * @param context The Context the view is running in, through which it can
      *                access the current theme, resources, etc.
      */
-    public CyclopsView(Context context, boolean onX, boolean onY) {
-        super(context);
+    public CyclopsView(Context context, AttributeSet attributes, boolean onX, boolean onY) {
+        super(context, attributes);
         this.onX = onX;
         this.onY = onY;
         this.setWillNotDraw(false);

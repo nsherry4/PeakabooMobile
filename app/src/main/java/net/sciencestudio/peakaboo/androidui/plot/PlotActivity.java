@@ -10,6 +10,8 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.provider.OpenableColumns;
+import android.support.design.widget.CoordinatorLayout;
+import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -324,22 +326,13 @@ public class PlotActivity extends AppCompatActivity {
 //                ViewGroup.LayoutParams.MATCH_PARENT,
 //                ViewGroup.LayoutParams.MATCH_PARENT));
 
-        chart = new CyclopsPlotView(this) {
-            @Override
-            protected void onRequestFitting(int channel) { tryFit(channel); }
+        chart = findViewById(R.id.plot_chart);
+        chart.setOnRequestFitting(this::tryFit);
+        chart.setOnSelectFitting(this::onFittingSelected);
 
-            @Override
-            protected void onSelectFitting(FittingResult fitting) { onFittingSelected(fitting); }
-        };
-        chart.setLayoutParams(new ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT));
+        CoordinatorLayout mainLayout = findViewById(R.id.plot_main_area);
+        FloatingActionButton fab = findViewById(R.id.plot_fab);
 
-        LinearLayout bodyLayout = findViewById(R.id.plot_body_layout);
-        //bodyLayout.addView(zoomable);
-        //zoomable.addView(chart);
-        bodyLayout.addView(chart);
-        bodyLayout.invalidate();
         PeakabooLog.get().log(Level.INFO, "Added chart component");
 
 

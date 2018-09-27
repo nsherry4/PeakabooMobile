@@ -3,8 +3,6 @@ package net.sciencestudio.peakaboo.androidui.map;
 import android.os.Bundle;
 import android.support.constraint.ConstraintLayout;
 import android.support.v7.app.AppCompatActivity;
-import android.widget.HorizontalScrollView;
-import android.widget.ScrollView;
 
 import net.sciencestudio.peakaboo.androidui.AppState;
 import net.sciencestudio.peakaboo.androidui.R;
@@ -18,7 +16,7 @@ import peakaboo.controller.mapper.data.MapSetController;
 
 public class MapActivity extends AppCompatActivity {
 
-    private MapView view;
+    private CyclopsMapView view;
 
 
     @Override
@@ -44,7 +42,7 @@ public class MapActivity extends AppCompatActivity {
 
 
         ConstraintLayout layout = findViewById(R.id.map_top_layout);
-        view = new MapView(this);
+        view = findViewById(R.id.map_chart);
         layout.addView(view);
 
 

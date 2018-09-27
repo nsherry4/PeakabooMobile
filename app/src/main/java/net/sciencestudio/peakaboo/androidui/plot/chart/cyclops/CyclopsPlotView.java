@@ -4,10 +4,13 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.util.AttributeSet;
 
 import net.sciencestudio.cyclops.visualization.backend.android.CyclopsView;
 import net.sciencestudio.peakaboo.androidui.AppState;
 import net.sciencestudio.cyclops.visualization.backend.android.AndroidBitmapSurface;
+
+import java.util.function.Consumer;
 
 import cyclops.Coord;
 import cyclops.visualization.Surface;
@@ -17,11 +20,13 @@ import peakaboo.display.plot.PlotData;
 import peakaboo.display.plot.PlotSettings;
 import peakaboo.display.plot.Plotter;
 
-public abstract class CyclopsPlotView extends CyclopsView {
+public class CyclopsPlotView extends CyclopsView {
 
     private Plotter plotter;
     private PlotDrawing plotDrawing;
 
+    private Consumer<Integer> onRequestFitting = (i) -> {};
+    private Consumer<FittingResult> onSelectFitting = (i) -> {};
 
     /**
      * Simple constructor to use when creating a view from code.
@@ -29,8 +34,8 @@ public abstract class CyclopsPlotView extends CyclopsView {
      * @param context The Context the view is running in, through which it can
      *                access the current theme, resources, etc.
      */
-    public CyclopsPlotView(Context context) {
-        super(context, true, false);
+    public CyclopsPlotView(Context context, AttributeSet attributes) {
+        super(context, attributes, true, false);
         plotter = new Plotter();
     }
 
@@ -61,20 +66,21 @@ public abstract class CyclopsPlotView extends CyclopsView {
             }
         }
 
-        onSelectFitting(bestFit);
+        onSelectFitting.accept(bestFit);
         return true;
     }
 
     @Override
     protected void onLongPress(float x, float y) {
         int channel = plotter.getChannel((int)x);
-        onRequestFitting(channel);
+        onRequestFitting.accept(channel);
     }
 
+    public void setOnRequestFitting(Consumer<Integer> onRequestFitting) {
+        this.onRequestFitting = onRequestFitting;
+    }
 
-    protected abstract void onRequestFitting(int channel);
-
-
-    protected abstract void onSelectFitting(FittingResult fitting);
-
+    public void setOnSelectFitting(Consumer<FittingResult> onSelectFitting) {
+        this.onSelectFitting = onSelectFitting;
+    }
 }
