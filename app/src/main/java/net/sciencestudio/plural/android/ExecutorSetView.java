@@ -3,6 +3,9 @@ package net.sciencestudio.plural.android;
 import android.app.ProgressDialog;
 import android.content.Context;
 
+import java.util.logging.Level;
+
+import peakaboo.common.PeakabooLog;
 import plural.executor.ExecutorSet;
 import plural.executor.ExecutorState;
 import plural.executor.PluralExecutor;
@@ -60,6 +63,7 @@ public class ExecutorSetView extends ProgressDialog {
             }
         });
 
+        this.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
 
     }
 
@@ -68,13 +72,16 @@ public class ExecutorSetView extends ProgressDialog {
         //String title = executors.getDescription() + ": " + executor.getName();
         //this.setTitle(title);
 
-
         if (executor.getState() == ExecutorState.STALLED) {
-            this.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            //this.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            //this.setIndeterminate(true);
+            this.setProgress(0);
         } else {
             this.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
             this.setMax(executor.getWorkUnits());
             this.setProgress(executor.getWorkUnitsCompleted());
+            this.setIndeterminate(false);
+            this.show();
         }
     }
 

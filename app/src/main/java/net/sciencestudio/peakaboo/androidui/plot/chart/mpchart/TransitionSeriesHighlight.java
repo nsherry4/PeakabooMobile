@@ -1,4 +1,4 @@
-package net.sciencestudio.peakaboo.androidui.plot.chart;
+package net.sciencestudio.peakaboo.androidui.plot.chart.mpchart;
 
 import com.github.mikephil.charting.highlight.Highlight;
 

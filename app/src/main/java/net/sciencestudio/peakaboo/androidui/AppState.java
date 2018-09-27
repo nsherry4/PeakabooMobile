@@ -1,5 +1,6 @@
 package net.sciencestudio.peakaboo.androidui;
 
+import peakaboo.controller.mapper.MappingController;
 import peakaboo.controller.plotter.PlotController;
 import peakaboo.controller.plotter.data.DataLoader;
 import peakaboo.dataset.DatasetReadResult;
@@ -15,6 +16,7 @@ public class AppState {
     public static ExecutorSet<DatasetReadResult> dataloaderjob;
 
     public static MapResultSet mapresults;
+    public static MappingController mapcontroller;
 
 
 }

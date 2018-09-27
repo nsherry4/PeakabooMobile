@@ -1,4 +1,4 @@
-package net.sciencestudio.peakaboo.androidui.plot.chart;
+package net.sciencestudio.peakaboo.androidui.plot.chart.mpchart;
 
 import android.os.Handler;
 import android.support.v4.content.ContextCompat;
@@ -31,18 +31,18 @@ import cyclops.ISpectrum;
 import cyclops.ReadOnlySpectrum;
 import cyclops.SigDigits;
 import peakaboo.controller.plotter.PlotController;
-import peakaboo.controller.plotter.view.PlotData;
-import peakaboo.controller.plotter.view.PlotSettings;
 import peakaboo.curvefit.curve.fitting.EnergyCalibration;
 import peakaboo.curvefit.curve.fitting.FittingResult;
 import peakaboo.curvefit.curve.fitting.FittingResultSet;
 import peakaboo.curvefit.peak.transition.TransitionSeries;
+import peakaboo.display.plot.PlotData;
+import peakaboo.display.plot.PlotSettings;
 
 
 /**
  * Manages the main plot and provides high-level access to it
  */
-public abstract class PlotChart {
+public abstract class MPPlotChart {
 
     private PlotActivity main;
     private PlotController controller;
@@ -56,7 +56,7 @@ public abstract class PlotChart {
 
     private boolean logged = true;
 
-    public PlotChart(PlotActivity main, PlotController controller) {
+    public MPPlotChart(PlotActivity main, PlotController controller) {
         this.main = main;
         this.controller = controller;
         createPlot();
@@ -251,7 +251,8 @@ public abstract class PlotChart {
     }
 
     private void createPlot() {
-        chart = main.findViewById(R.id.chart);
+        //TODO: Renenable this if we start using MPPLotChart again
+        //chart = main.findViewById(R.id.chart);
         MarkerView marker = new FittingMarkerView(this.main, R.layout.layout_plot_marker);
         //MarkerView marker = new MarkerView(this.main, R.layout.layout_plot_marker);
         chart.setMarker(marker);
@@ -360,8 +361,8 @@ public abstract class PlotChart {
             @Override
             public void onChartSingleTapped(MotionEvent me) {
                 Entry e = chart.getEntryByTouchPoint(me.getX(), me.getY());
-                int x = (int) e.getX();
-                System.out.println(x);
+                int channel = (int) e.getX();
+                System.out.println(channel);
 
                 float bestValue = 1f;
                 FittingResult bestFit = null;
@@ -371,7 +372,7 @@ public abstract class PlotChart {
                 }
 
                 for (FittingResult fit : AppState.controller.fitting().getFittingSelectionResults()) {
-                    float value = fit.getFit().get(x);
+                    float value = fit.getFit().get(channel);
                     if (value > bestValue) {
                         bestValue = value;
                         bestFit = fit;

@@ -8,42 +8,33 @@ import android.graphics.Path;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.graphics.Shader;
 import android.graphics.Typeface;
 
-import java.io.IOException;
-import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
 
 import cyclops.visualization.Buffer;
-import cyclops.visualization.SaveableSurface;
 import cyclops.visualization.Surface;
 import cyclops.visualization.palette.PaletteColour;
-import cyclops.visualization.template.SurfaceTemplate;
 
+public abstract class AbstractAndroidSurface implements Surface {
 
-public class AndroidSurface implements SaveableSurface {
-
-    protected Bitmap bm;
-    private Canvas canvas;
+    protected Canvas canvas;
     private Path path;
     private Paint paint;
     private CompositeModes compositeMode;
-
     private Map<Integer, Paint> paintSaveStack = new HashMap<>();
 
-    public AndroidSurface(Bitmap bm) {
-        this.bm = bm;
-        this.canvas = new Canvas(bm);
+    public AbstractAndroidSurface(Canvas canvas) {
+        this.canvas = canvas;
         path = new Path();
         paint = new Paint();
-
 
         setLineStyle(1f, EndCap.ROUND, LineJoin.ROUND);
         setAntialias(true);
         setCompositeMode(CompositeModes.OVER);
-
     }
 
     @Override
@@ -56,15 +47,14 @@ public class AndroidSurface implements SaveableSurface {
         path.moveTo(x, y);
     }
 
-    @Override
-    public void arcTo(float x, float y, float width, float height, float angle, float extent) {
-        path.arcTo(x, y, x+width, y+height, angle, angle+extent, false);
+    public void rectAt(float x, float y, float width, float height) {
+        path.addRect(new RectF(x, y, x+width, y+height), Path.Direction.CW);
     }
 
-    @Override
-    public void addShape(SurfaceTemplate template) {
-        template.apply(this);
+    public void roundRectAt(float x, float y, float width, float height, float xradius, float yradius) {
+        path.addRoundRect(new RectF(x, y, x+width, y+height), xradius, yradius, Path.Direction.CW);
     }
+
 
     @Override
     public void stroke() {
@@ -131,7 +121,7 @@ public class AndroidSurface implements SaveableSurface {
     }
 
     @Override
-    public void setLineJoin(LineJoin lineJoin) {
+    public void setLineJoin(Surface.LineJoin lineJoin) {
         switch (lineJoin) {
 
             case ROUND:
@@ -148,7 +138,7 @@ public class AndroidSurface implements SaveableSurface {
     }
 
     @Override
-    public void setLineEnd(EndCap endCap) {
+    public void setLineEnd(Surface.EndCap endCap) {
         switch (endCap) {
 
             case BUTT:
@@ -164,7 +154,7 @@ public class AndroidSurface implements SaveableSurface {
     }
 
     @Override
-    public void setLineStyle(float width, EndCap endCap, LineJoin lineJoin) {
+    public void setLineStyle(float width, Surface.EndCap endCap, Surface.LineJoin lineJoin) {
         setLineWidth(width);
         setLineEnd(endCap);
         setLineJoin(lineJoin);
@@ -208,7 +198,6 @@ public class AndroidSurface implements SaveableSurface {
         int i = canvas.save();
         paintSaveStack.put(i, paint);
         paint = new Paint(paint);
-        System.out.println("SAVE " + i);
         return i;
     }
 
@@ -302,7 +291,7 @@ public class AndroidSurface implements SaveableSurface {
     }
 
     @Override
-    public void setCompositeMode(CompositeModes compositeMode) {
+    public void setCompositeMode(Surface.CompositeModes compositeMode) {
 
         this.compositeMode = compositeMode;
 
@@ -333,17 +322,7 @@ public class AndroidSurface implements SaveableSurface {
     }
 
     @Override
-    public CompositeModes getCompositeMode() {
+    public Surface.CompositeModes getCompositeMode() {
         return compositeMode;
-    }
-
-    @Override
-    public Surface getNewContextForSurface() {
-        return new AndroidSurface(bm);
-    }
-
-    @Override
-    public void write(OutputStream outputStream) throws IOException {
-        bm.compress(Bitmap.CompressFormat.PNG, 100, outputStream);
     }
 }

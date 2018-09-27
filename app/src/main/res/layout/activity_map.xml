@@ -6,13 +6,34 @@
     android:layout_height="match_parent"
     tools:context=".map.MapActivity">
 
-    <ImageView
-        android:id="@+id/map_image"
+    <ScrollView
+        android:id="@+id/map_vscroll"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:fillViewport="true"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@color/colorPrimary" />
+        >
+
+        <HorizontalScrollView
+            android:id="@+id/map_hscroll"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:fillViewport="true"
+            >
+
+            <ImageView
+                android:id="@+id/map_image"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:srcCompat="@color/colorPrimary" />
+        </HorizontalScrollView>
+    </ScrollView>
+
 </android.support.constraint.ConstraintLayout>

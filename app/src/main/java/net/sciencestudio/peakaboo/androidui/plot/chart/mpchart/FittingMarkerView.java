@@ -1,4 +1,4 @@
-package net.sciencestudio.peakaboo.androidui.plot.chart;
+package net.sciencestudio.peakaboo.androidui.plot.chart.mpchart;
 
 import android.content.Context;
 import android.widget.TextView;

@@ -5,7 +5,7 @@ import android.graphics.Bitmap;
 import cyclops.visualization.Buffer;
 import cyclops.visualization.palette.PaletteColour;
 
-public class BitmapBuffer extends AndroidSurface implements Buffer {
+public class BitmapBuffer extends AndroidBitmapSurface implements Buffer {
 
     private int width, height;
 

@@ -18,6 +18,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.HorizontalScrollView;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import net.sciencestudio.autodialog.model.Group;
@@ -26,7 +30,9 @@ import net.sciencestudio.peakaboo.androidui.AppState;
 import net.sciencestudio.peakaboo.androidui.R;
 import net.sciencestudio.peakaboo.androidui.log.LogViewActivity;
 import net.sciencestudio.peakaboo.androidui.map.MapActivity;
-import net.sciencestudio.peakaboo.androidui.plot.chart.PlotChart;
+import net.sciencestudio.peakaboo.androidui.plot.chart.cyclops.CyclopsPlotView;
+import net.sciencestudio.peakaboo.androidui.plot.chart.cyclops.ZoomableViewGroup;
+import net.sciencestudio.peakaboo.androidui.plot.chart.mpchart.MPPlotChart;
 import net.sciencestudio.plural.android.ExecutorSetView;
 import net.sciencestudio.plural.android.StreamExecutorView;
 
@@ -62,8 +68,8 @@ import plural.streams.StreamExecutor;
 
 public class PlotActivity extends AppCompatActivity {
 
-    private static final String STATE_PLOT_CONTROLLER = "plotController";
-    private PlotChart chart;
+    //private MPPlotChart chart;
+    private CyclopsPlotView chart;
 
 
     private static final int ACTIVITY_OPEN_FILES = 1;
@@ -252,7 +258,7 @@ public class PlotActivity extends AppCompatActivity {
         Intent intent = getIntent();
         Uri data = intent.getData();
 
-        if (intent.getAction() == Intent.ACTION_VIEW && data != null) {
+        if (intent.getAction().equals(Intent.ACTION_VIEW) && data != null) {
 
             System.out.println("EXTRAS:");
             if (intent.getExtras() != null) {
@@ -266,7 +272,6 @@ public class PlotActivity extends AppCompatActivity {
 
 
             openDataSet(Collections.singletonList(intent.getData()));
-            return;
         }
 
     }
@@ -306,17 +311,38 @@ public class PlotActivity extends AppCompatActivity {
             AppState.controller = new PlotController(this.getFilesDir());
         }
 
-        chart = new PlotChart(this, AppState.controller) {
+//        chart = new MPPlotChart(this, AppState.controller) {
+//            @Override
+//            protected void onRequestFitting(int channel) { tryFit(channel); }
+//
+//            @Override
+//            protected void onSelectFitting(FittingResult fitting) { onFittingSelected(fitting); }
+//        };
+
+//        ZoomableViewGroup zoomable = new ZoomableViewGroup(this);
+//        zoomable.setLayoutParams(new ViewGroup.LayoutParams(
+//                ViewGroup.LayoutParams.MATCH_PARENT,
+//                ViewGroup.LayoutParams.MATCH_PARENT));
+
+        chart = new CyclopsPlotView(this) {
             @Override
-            protected void onRequestFitting(int channel) {
-                tryFit(channel);
-            }
+            protected void onRequestFitting(int channel) { tryFit(channel); }
 
             @Override
-            protected void onSelectFitting(FittingResult fitting) {
-                onFittingSelected(fitting);
-            }
+            protected void onSelectFitting(FittingResult fitting) { onFittingSelected(fitting); }
         };
+        chart.setLayoutParams(new ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT));
+
+        LinearLayout bodyLayout = findViewById(R.id.plot_body_layout);
+        //bodyLayout.addView(zoomable);
+        //zoomable.addView(chart);
+        bodyLayout.addView(chart);
+        bodyLayout.invalidate();
+        PeakabooLog.get().log(Level.INFO, "Added chart component");
+
+
     }
 
     private void updateUI() {
@@ -341,8 +367,6 @@ public class PlotActivity extends AppCompatActivity {
 
         chart.update();
     }
-
-
 
 
 
@@ -371,7 +395,7 @@ public class PlotActivity extends AppCompatActivity {
             List<AndroidDataFile> datafiles = new ArrayList<>();
 
             for (Uri uri : uris) {
-                Cursor cursor = getContentResolver().query(data, null, null, null, null);
+                Cursor cursor = getContentResolver().query(uri, null, null, null, null);
                 if (cursor == null || !cursor.moveToFirst()) {
                     PeakabooLog.get().log(Level.SEVERE, "Could not open dataset, cursor failure");
                     return;
@@ -503,7 +527,8 @@ public class PlotActivity extends AppCompatActivity {
             public void onSessionNewer() {
                 //TODO:
                 System.out.println("onSessionNewer");
-                Toast.makeText(PlotActivity.this, R.string.toast_newersession, Toast.LENGTH_LONG);
+                Toast t = Toast.makeText(PlotActivity.this, R.string.toast_newersession, Toast.LENGTH_LONG);
+                t.show();
             }
 
             @Override
@@ -538,6 +563,8 @@ public class PlotActivity extends AppCompatActivity {
                 showMap(results.getResult().get());
             }
         });
+
+        dialog.show();
         results.start();
     }
 
