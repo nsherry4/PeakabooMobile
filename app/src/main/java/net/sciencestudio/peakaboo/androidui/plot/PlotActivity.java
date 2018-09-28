@@ -21,9 +21,6 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.HorizontalScrollView;
-import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import net.sciencestudio.autodialog.model.Group;
@@ -33,8 +30,6 @@ import net.sciencestudio.peakaboo.androidui.R;
 import net.sciencestudio.peakaboo.androidui.log.LogViewActivity;
 import net.sciencestudio.peakaboo.androidui.map.MapActivity;
 import net.sciencestudio.peakaboo.androidui.plot.chart.cyclops.CyclopsPlotView;
-import net.sciencestudio.peakaboo.androidui.plot.chart.cyclops.ZoomableViewGroup;
-import net.sciencestudio.peakaboo.androidui.plot.chart.mpchart.MPPlotChart;
 import net.sciencestudio.plural.android.ExecutorSetView;
 import net.sciencestudio.plural.android.StreamExecutorView;
 
@@ -80,8 +75,8 @@ public class PlotActivity extends AppCompatActivity {
 
     //UI Lookups
     private DrawerLayout mDrawerLayout;
-    private MenuItem approveFitting, rejectFitting, energyCalibration, mapFittings;
-
+    private MenuItem energyCalibration, mapFittings;
+    private FloatingActionButton fabAcceptFitting, fabRejectFitting;
 
 
     @Override
@@ -132,14 +127,8 @@ public class PlotActivity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.plot_menu, menu);
-
-
-        approveFitting = menu.findItem(R.id.action_approvefitting);
-        rejectFitting = menu.findItem(R.id.action_rejectfitting);
         System.out.println("-------> " + mDrawerLayout);
-
         EventfulConfig.uiThreadRunner.accept(this::updateUI);
-
         return true;
     }
 
@@ -179,14 +168,6 @@ public class PlotActivity extends AppCompatActivity {
                 return true;
 
             case R.id.action_about:
-                return true;
-
-            case R.id.action_approvefitting:
-                actionApproveFitting();
-                return true;
-
-            case R.id.action_rejectfitting:
-                actionRejectFitting();
                 return true;
 
 
@@ -331,10 +312,17 @@ public class PlotActivity extends AppCompatActivity {
         chart.setOnSelectFitting(this::onFittingSelected);
 
         CoordinatorLayout mainLayout = findViewById(R.id.plot_main_area);
-        FloatingActionButton fab = findViewById(R.id.plot_fab);
+        fabAcceptFitting = findViewById(R.id.plot_fab_acceptfitting);
+        fabAcceptFitting.setOnClickListener(v -> actionApproveFitting());
+        fabRejectFitting = findViewById(R.id.plot_fab_rejectfitting);
+        fabRejectFitting.setOnClickListener(v -> actionRejectFitting());
 
         PeakabooLog.get().log(Level.INFO, "Added chart component");
 
+
+    }
+
+    private void onFabClick(View view) {
 
     }
 
@@ -348,14 +336,26 @@ public class PlotActivity extends AppCompatActivity {
         );
 
         if (!AppState.controller.fitting().getProposedTransitionSeries().isEmpty()) {
-            if (approveFitting != null) approveFitting.setVisible(true);
-            if (rejectFitting != null) rejectFitting.setVisible(true);
+            if (fabAcceptFitting != null){
+                fabAcceptFitting.invalidate();
+                if (fabRejectFitting != null) fabRejectFitting.hide();
+                if (!fabAcceptFitting.isShown()) fabAcceptFitting.show();
+            }
+            //if (approveFitting != null) approveFitting.setVisible(true);
+            //if (rejectFitting != null) rejectFitting.setVisible(true);
         } else if (!AppState.controller.fitting().getHighlightedTransitionSeries().isEmpty()) {
-            if (approveFitting != null) approveFitting.setVisible(false);
-            if (rejectFitting != null) rejectFitting.setVisible(true);
+            if (fabRejectFitting != null){
+                fabRejectFitting.invalidate();
+                if (fabAcceptFitting != null) fabAcceptFitting.hide();
+                if (!fabRejectFitting.isShown()) fabRejectFitting.show();
+            }
+            //if (approveFitting != null) approveFitting.setVisible(false);
+            //if (rejectFitting != null) rejectFitting.setVisible(true);
         } else {
-            if (approveFitting != null) approveFitting.setVisible(false);
-            if (rejectFitting != null) rejectFitting.setVisible(false);
+            if (fabAcceptFitting != null && fabAcceptFitting.isShown()) fabAcceptFitting.hide();
+            if (fabRejectFitting != null && fabRejectFitting.isShown()) fabRejectFitting.hide();
+            //if (approveFitting != null) approveFitting.setVisible(false);
+            //if (rejectFitting != null) rejectFitting.setVisible(false);
         }
 
         chart.invalidate();
@@ -562,6 +562,7 @@ public class PlotActivity extends AppCompatActivity {
     private void showMap(MapResultSet maps) {
         Intent mapIntent = new Intent(PlotActivity.this, MapActivity.class);
         AppState.mapresults = maps;
+        AppState.mapcontroller = null;
         PlotActivity.this.startActivity(mapIntent);
     }
 

@@ -1,22 +1,31 @@
 package net.sciencestudio.peakaboo.androidui.map;
 
+import android.content.Intent;
 import android.os.Bundle;
-import android.support.constraint.ConstraintLayout;
+import android.support.design.widget.NavigationView;
 import android.support.v7.app.AppCompatActivity;
+import android.view.Menu;
+import android.view.MenuItem;
 
 import net.sciencestudio.peakaboo.androidui.AppState;
 import net.sciencestudio.peakaboo.androidui.R;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 import cyclops.Coord;
 import peakaboo.controller.mapper.MappingController;
 import peakaboo.controller.mapper.data.MapSetController;
+import peakaboo.controller.mapper.settings.MapFittingSettings;
+import peakaboo.curvefit.peak.transition.TransitionSeries;
+import peakaboo.display.map.MapScaleMode;
 
 
 public class MapActivity extends AppCompatActivity {
 
-    private CyclopsMapView view;
+    private CyclopsMapView mapChart;
+    private Map<MenuItem, TransitionSeries> menuItems = new HashMap<>();
 
 
     @Override
@@ -24,30 +33,86 @@ public class MapActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map);
 
-        //TODO: Check incoming Intent, this may be a reload due to rotation, etc
 
-        MapSetController mapSetController = new MapSetController();
-        mapSetController.setMapData(AppState.mapresults, "", new ArrayList<>(), null, null, null);
-        AppState.mapcontroller = new MappingController(mapSetController, null, AppState.controller);
+        // If there is no mapcontroller, or that mapcontroller's mapresults object isn't the same as
+        // the current mapresults, we make everything anew
+        if (AppState.mapcontroller == null || AppState.mapcontroller.mapsController.getMapResultSet() != AppState.mapresults) {
+            MapSetController mapSetController = new MapSetController();
+            mapSetController.setMapData(AppState.mapresults, "", new ArrayList<>(), null, null, null);
+            AppState.mapcontroller = new MappingController(mapSetController, null, AppState.controller);
 
-        if (AppState.mapcontroller.mapsController.hasOriginalDataDimensions()) {
-            AppState.mapcontroller.getSettings().getView().setDataWidth(AppState.mapcontroller.mapsController.getOriginalDataWidth());
-            AppState.mapcontroller.getSettings().getView().setDataHeight(AppState.mapcontroller.mapsController.getOriginalDataHeight());
-        } else {
-            //no option to set dimensions, so guess instead
-            Coord<Integer> guess = AppState.mapcontroller.mapsController.guessDataDimensions().run().get();
-            AppState.mapcontroller.getSettings().getView().setDataWidth(guess.x);
-            AppState.mapcontroller.getSettings().getView().setDataHeight(guess.y);
+            if (AppState.mapcontroller.mapsController.hasOriginalDataDimensions()) {
+                AppState.mapcontroller.getSettings().getView().setDataWidth(AppState.mapcontroller.mapsController.getOriginalDataWidth());
+                AppState.mapcontroller.getSettings().getView().setDataHeight(AppState.mapcontroller.mapsController.getOriginalDataHeight());
+            } else {
+                //no option to set dimensions, so guess instead
+                Coord<Integer> guess = AppState.mapcontroller.mapsController.guessDataDimensions().run().get();
+                AppState.mapcontroller.getSettings().getView().setDataWidth(guess.x);
+                AppState.mapcontroller.getSettings().getView().setDataHeight(guess.y);
+            }
+
+            //TODO: If we ever add Overlay/Ratio, this hard-coding will have to be removed
+            AppState.mapcontroller.getSettings().getMapFittings().setMapScaleMode(MapScaleMode.RELATIVE);
         }
 
 
-        ConstraintLayout layout = findViewById(R.id.map_top_layout);
-        view = findViewById(R.id.map_chart);
-        layout.addView(view);
-
+        setupUI();
 
 
     }
 
+    void setupUI() {
+        mapChart = findViewById(R.id.map_chart);
+        NavigationView drawer = findViewById(R.id.plot_nav_drawer);
+        drawer.bringToFront();
+        Menu menu = drawer.getMenu();
+        populateFittingsMenu(menu);
+        drawer.invalidate();
+
+        AppState.mapcontroller.addListener(event -> {
+            updateUI();
+            if (
+                    !event.equals(MappingController.UpdateType.AREA_SELECTION.toString())
+                            && !event.equals(MappingController.UpdateType.AREA_SELECTION.toString())) {
+
+                mapChart.setNeedsRedraw();
+
+            }
+        });
+    }
+
+    void updateUI() {
+        mapChart.invalidate();
+    }
+
+    private void populateFittingsMenu(Menu menu) {
+        MapFittingSettings fitSettings = AppState.mapcontroller.getSettings().getMapFittings();
+        int order = 0;
+        menu.setGroupCheckable(1, true, false);
+
+        for (TransitionSeries ts : fitSettings.getAllTransitionSeries()) {
+            MenuItem item = menu.add(1, Menu.NONE, order++, ts.toString());
+            item.setCheckable(true);
+            item.setChecked(fitSettings.getTransitionSeriesVisibility(ts));
+            item.setOnMenuItemClickListener(this::onFittingItemClicked);
+            menuItems.put(item, ts);
+        }
+    }
+
+    private boolean onFittingItemClicked(MenuItem item) {
+        MapFittingSettings fitSettings = AppState.mapcontroller.getSettings().getMapFittings();
+
+        if (menuItems.containsKey(item)) {
+            System.out.println("item = " + item);
+            TransitionSeries ts = menuItems.get(item);
+
+            fitSettings.setTransitionSeriesVisibility(ts, !fitSettings.getTransitionSeriesVisibility(ts));
+            item.setChecked(fitSettings.getTransitionSeriesVisibility(ts));
+
+            fitSettings.invalidateInterpolation();
+            return true;
+        }
+        return false;
+    }
 
 }

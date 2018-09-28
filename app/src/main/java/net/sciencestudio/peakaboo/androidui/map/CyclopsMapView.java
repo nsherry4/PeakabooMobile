@@ -19,6 +19,8 @@ import net.sciencestudio.cyclops.visualization.backend.android.AndroidBitmapSurf
 
 import cyclops.Coord;
 import cyclops.visualization.Surface;
+import peakaboo.controller.mapper.settings.MapFittingSettings;
+import peakaboo.curvefit.peak.transition.TransitionSeries;
 import peakaboo.display.map.MapRenderData;
 import peakaboo.display.map.MapRenderSettings;
 import peakaboo.display.map.Mapper;
@@ -43,9 +45,14 @@ public class CyclopsMapView extends CyclopsView {
 
     @Override
     protected void paint(Surface surface, Coord<Integer> size) {
+
         MapRenderData data = AppState.mapcontroller.getMapRenderData();
         MapRenderSettings settings = AppState.mapcontroller.getRenderSettings();
         mapper.draw(data, settings, surface, size);
+    }
+
+    void setNeedsRedraw() {
+        mapper.setNeedsRedraw();
     }
 
     @Override
