@@ -18,7 +18,6 @@ import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
 
 import net.sciencestudio.peakaboo.androidui.AppState;
 import net.sciencestudio.peakaboo.androidui.R;
-import net.sciencestudio.peakaboo.androidui.plot.LineLabel;
 import net.sciencestudio.peakaboo.androidui.plot.PlotActivity;
 
 import java.util.ArrayList;

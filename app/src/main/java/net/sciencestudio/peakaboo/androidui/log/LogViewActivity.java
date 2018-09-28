@@ -2,6 +2,7 @@ package net.sciencestudio.peakaboo.androidui.log;
 
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.text.method.ScrollingMovementMethod;
 import android.widget.TextView;
 
 import net.sciencestudio.peakaboo.androidui.R;
@@ -10,6 +11,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 
+import eventful.EventfulConfig;
 import peakaboo.common.PeakabooLog;
 
 public class LogViewActivity extends AppCompatActivity {
@@ -26,6 +28,7 @@ public class LogViewActivity extends AppCompatActivity {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        logtext.setMovementMethod(new ScrollingMovementMethod());
         logtext.setText(logs);
 
     }

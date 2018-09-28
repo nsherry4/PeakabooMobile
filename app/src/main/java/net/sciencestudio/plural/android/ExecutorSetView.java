@@ -14,6 +14,7 @@ public class ExecutorSetView extends ProgressDialog {
 
     private ExecutorSet<?> executors;
     private int percent = -1;
+    private String title = "";
 
     /**
      * Creates a Progress dialog.
@@ -71,9 +72,14 @@ public class ExecutorSetView extends ProgressDialog {
 
     private void update(PluralExecutor executor) {
 
-        String title = executor.getName();
-        this.setTitle(title);
+        //Conditionally update title
+        String newTitle = executor.getName();
+        if (!title.equals(newTitle)) {
+            title = newTitle;
+            this.setTitle(title);
+        }
 
+        //Conditionally update progress indicator
         if (executor.getState() == ExecutorState.STALLED) {
             this.setIndeterminate(true);
             if (this.getProgress() != 0) {

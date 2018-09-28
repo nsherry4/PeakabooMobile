@@ -32,6 +32,8 @@ import net.sciencestudio.peakaboo.androidui.map.MapActivity;
 import net.sciencestudio.peakaboo.androidui.plot.chart.cyclops.CyclopsPlotView;
 import net.sciencestudio.plural.android.ExecutorSetView;
 import net.sciencestudio.plural.android.StreamExecutorView;
+import net.sciencestudio.scratch.encoders.compressors.Compressors;
+import net.sciencestudio.scratch.encoders.serializers.Serializers;
 
 import java.io.File;
 import java.io.IOException;
@@ -43,6 +45,7 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 
+import cyclops.ISpectrum;
 import eventful.EventfulConfig;
 import peakaboo.common.Env;
 import peakaboo.common.PeakabooConfiguration;
@@ -263,8 +266,10 @@ public class PlotActivity extends AppCompatActivity {
 
     private void startup() {
 
-        PeakabooConfiguration.compression = false;
+        PeakabooConfiguration.compression = true;
         PeakabooConfiguration.diskstore = true;
+        //PeakabooConfiguration.overrideSpectrumSerializer = () -> Serializers.kryo(ISpectrum.class);
+        //PeakabooConfiguration.overrideSpectrumCompressor = () -> Compressors.deflate();
 
         PeakabooLog.init(new File(this.getFilesDir() + "/Logging/"));
         DataSourcePluginManager.init(new File(this.getFilesDir() + "/Plugins/DataSource/"));
