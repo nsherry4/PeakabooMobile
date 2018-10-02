@@ -32,7 +32,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <android.widget.NumberPicker
+        <net.sciencestudio.autodialog.view.android.widget.SpinBox
             android:id="@+id/min_energy"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -40,7 +40,7 @@
             android:ems="10"
             android:inputType="numberDecimal" />
 
-        <android.widget.NumberPicker
+        <net.sciencestudio.autodialog.view.android.widget.SpinBox
             android:id="@+id/max_energy"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

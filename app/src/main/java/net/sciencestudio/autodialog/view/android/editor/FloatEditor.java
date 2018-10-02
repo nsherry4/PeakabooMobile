@@ -2,20 +2,22 @@ package net.sciencestudio.autodialog.view.android.editor;
 
 import android.content.Context;
 import android.view.View;
-import android.widget.ToggleButton;
 
 import net.sciencestudio.autodialog.model.Parameter;
-import net.sciencestudio.autodialog.model.Value;
-import net.sciencestudio.autodialog.view.editors.Editor;
+import net.sciencestudio.autodialog.view.android.widget.SpinBox;
 
-import eventful.EventfulType;
 
-public class ToggleEditor extends AbstractViewEditor<Boolean> {
+public class FloatEditor extends AbstractViewEditor<Float> {
 
-    private ToggleButton component;
+    private SpinBox component;
 
-    public ToggleEditor(Context context) {
+    public FloatEditor(Context context) {
         super(context);
+    }
+
+    @Override
+    protected void setEnabled(boolean enabled) {
+        component.setEnabled(enabled);
     }
 
     @Override
@@ -24,19 +26,24 @@ public class ToggleEditor extends AbstractViewEditor<Boolean> {
     }
 
     @Override
-    public void initialize(Parameter<Boolean> parameter) {
+    public void initialize(Parameter<Float> parameter) {
         super.param = parameter;
-        component = new ToggleButton(super.context);
+        component = new SpinBox(super.context);
+        component.setStep(0.01f);
+        component.setValue(parameter.getValue());
+
+        component.setOnValueChangeListener(v -> onComponentChanged());
+
     }
 
     @Override
-    public Boolean getEditorValue() {
-        return component.isChecked();
+    public Float getEditorValue() {
+        return component.getValue();
     }
 
     @Override
-    public void setEditorValue(Boolean selected) {
-        component.setSelected(selected);
+    public void setEditorValue(Float value) {
+        component.setValue(value);
     }
 
     @Override
@@ -57,10 +64,5 @@ public class ToggleEditor extends AbstractViewEditor<Boolean> {
     @Override
     public Object getComponent() {
         return component;
-    }
-
-    @Override
-    protected void setEnabled(boolean enabled) {
-        component.setEnabled(enabled);
     }
 }

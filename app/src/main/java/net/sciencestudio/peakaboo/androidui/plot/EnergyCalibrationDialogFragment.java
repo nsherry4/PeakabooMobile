@@ -9,6 +9,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.NumberPicker;
 
+import net.sciencestudio.autodialog.view.android.widget.SpinBox;
 import net.sciencestudio.peakaboo.androidui.AppState;
 import net.sciencestudio.peakaboo.androidui.R;
 
@@ -43,30 +44,36 @@ public class EnergyCalibrationDialogFragment extends DialogFragment {
         AlertDialog dialog = builder.create();
 
 
-        NumberPicker minEnergy = view.findViewById(R.id.min_energy);
-        NumberPicker maxEnergy = view.findViewById(R.id.max_energy);
+        SpinBox minEnergy = view.findViewById(R.id.min_energy);
+        SpinBox maxEnergy = view.findViewById(R.id.max_energy);
 
-        System.out.println("MinEnergy: " + AppState.controller.fitting().getMinEnergy());
-        System.out.println("MinEnergy: " + AppState.controller.fitting().getMaxEnergy());
 
-        minEnergy.setMinValue(0*1000);
-        minEnergy.setMaxValue(1*1000);
-        minEnergy.setValue((int)AppState.controller.fitting().getMinEnergy()*1000);
-        minEnergy.setOnValueChangedListener((NumberPicker picker, int oldVal, int newVal) -> {
+//        NumberPicker minEnergy = view.findViewById(R.id.min_energy);
+//        NumberPicker maxEnergy = view.findViewById(R.id.max_energy);
+//
+//        System.out.println("MinEnergy: " + AppState.controller.fitting().getMinEnergy());
+//        System.out.println("MinEnergy: " + AppState.controller.fitting().getMaxEnergy());
+//
+        minEnergy.setMinValue(-1f);
+        minEnergy.setMaxValue(1f);
+        minEnergy.setValue(AppState.controller.fitting().getMinEnergy());
+        minEnergy.setStep(0.01f);
+        minEnergy.setOnValueChangeListener(newVal -> {
             try {
-                AppState.controller.fitting().setMinEnergy(((float) newVal) / 1000f);
+                AppState.controller.fitting().setMinEnergy(newVal);
             } catch (Exception e) {
                 //BAD
             }
         });
-
-
-        maxEnergy.setMinValue(0*1000);
-        maxEnergy.setMaxValue(100*1000);
-        maxEnergy.setValue((int)(AppState.controller.fitting().getMaxEnergy()*1000));
-        maxEnergy.setOnValueChangedListener((NumberPicker picker, int oldVal, int newVal) -> {
+//
+//
+        maxEnergy.setMinValue(0f);
+        maxEnergy.setMaxValue(100f);
+        maxEnergy.setValue(AppState.controller.fitting().getMaxEnergy());
+        maxEnergy.setStep(0.01f);
+        maxEnergy.setOnValueChangeListener(newVal -> {
             try {
-                AppState.controller.fitting().setMaxEnergy(((float) newVal) / 1000f);
+                AppState.controller.fitting().setMaxEnergy(newVal);
             } catch (Exception e) {
                 //BAD
             }

@@ -42,5 +42,6 @@ dependencies {
     //Number Picker
     //implementation 'com.michaelmuenzer.android:ScrollableNumberPicker:0.2.2'
     //implementation 'com.github.polok:clicknumberpicker:0.1.2'
+    //implementation 'com.github.isabsent:decimalpicker:0.0.10'
 
 }

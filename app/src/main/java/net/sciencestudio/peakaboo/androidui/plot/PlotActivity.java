@@ -25,6 +25,7 @@ import android.view.View;
 import android.widget.Toast;
 
 import net.sciencestudio.autodialog.model.Group;
+import net.sciencestudio.autodialog.view.android.AndroidAutoDialog;
 import net.sciencestudio.bolt.plugin.core.BoltPluginController;
 import net.sciencestudio.bolt.plugin.core.BoltPluginSet;
 import net.sciencestudio.peakaboo.androidui.AndroidDataFile;
@@ -81,7 +82,6 @@ public class PlotActivity extends AppCompatActivity {
 
 
     private static final int ACTIVITY_OPEN_FILES = 1;
-
 
 
     //UI Lookups
@@ -350,7 +350,8 @@ public class PlotActivity extends AppCompatActivity {
         Menu filterMenu = filterMenuItem.getSubMenu();
         MenuItem item = filterMenu.add(filter.getFilterName());
         item.setOnMenuItemClickListener(menuitem -> {
-            //TODO: Create Filter Preferences Dialog
+            AlertDialog dialog = AndroidAutoDialog.create(filter.getParameterGroup(), this);
+            dialog.show();
             return true;
         });
     }

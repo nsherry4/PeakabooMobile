@@ -52,6 +52,13 @@ public abstract class AbstractViewEditor<T> implements AndroidEditor<T> {
 
     }
 
+    protected void onComponentChanged() {
+        getEditorValueHook().updateListeners(getEditorValue());
+        if (!param.setValue(getEditorValue())) {
+            setFromParameter();
+        }
+    }
+
     protected abstract void setEnabled(boolean enabled);
 
 }

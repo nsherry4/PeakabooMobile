@@ -37,6 +37,9 @@ public class CyclopsPlotView extends CyclopsView {
     public CyclopsPlotView(Context context, AttributeSet attributes) {
         super(context, attributes, true, false);
         plotter = new Plotter();
+        for (int i = 0; i < attributes.getAttributeCount(); i++) {
+            System.out.println(attributes.getAttributeName(i));
+        }
     }
 
 
