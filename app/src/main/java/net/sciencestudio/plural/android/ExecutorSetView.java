@@ -73,7 +73,7 @@ public class ExecutorSetView extends ProgressDialog {
     private void update(PluralExecutor executor) {
 
         //Conditionally update title
-        String newTitle = executor.getName();
+        String newTitle = executor.getName() + " (" + (executors.toList().indexOf(executor)+1) + "/" + executors.toList().size() + ")";
         if (!title.equals(newTitle)) {
             title = newTitle;
             this.setTitle(title);

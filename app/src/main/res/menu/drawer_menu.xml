@@ -18,10 +18,14 @@
 
     <item
         android:id="@+id/action_filters"
-        android:enabled="false"
+        android:enabled="true"
         android:orderInCategory="110"
         android:title="@string/action_filters"
-        android:visible="true" />
+        android:visible="true">
+        <menu
+            android:id="@+id/action_filters_submenu">
+        </menu>
+    </item>
 
     <item
         android:id="@+id/action_map"

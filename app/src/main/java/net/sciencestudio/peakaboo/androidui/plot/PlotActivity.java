@@ -16,6 +16,7 @@ import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
@@ -24,6 +25,8 @@ import android.view.View;
 import android.widget.Toast;
 
 import net.sciencestudio.autodialog.model.Group;
+import net.sciencestudio.bolt.plugin.core.BoltPluginController;
+import net.sciencestudio.bolt.plugin.core.BoltPluginSet;
 import net.sciencestudio.peakaboo.androidui.AndroidDataFile;
 import net.sciencestudio.peakaboo.androidui.AppState;
 import net.sciencestudio.peakaboo.androidui.R;
@@ -41,9 +44,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 import cyclops.ISpectrum;
 import eventful.EventfulConfig;
@@ -61,7 +67,9 @@ import peakaboo.dataset.DatasetReadResult;
 import peakaboo.datasink.plugin.DataSinkPluginManager;
 import peakaboo.datasource.model.DataSource;
 import peakaboo.datasource.plugin.DataSourcePluginManager;
+import peakaboo.filter.model.Filter;
 import peakaboo.filter.model.FilterPluginManager;
+import peakaboo.filter.plugins.FilterPlugin;
 import peakaboo.mapping.results.MapResultSet;
 import plural.executor.ExecutorSet;
 import plural.streams.StreamExecutor;
@@ -78,7 +86,7 @@ public class PlotActivity extends AppCompatActivity {
 
     //UI Lookups
     private DrawerLayout mDrawerLayout;
-    private MenuItem energyCalibration, mapFittings;
+    private MenuItem energyCalibration, mapFittings, filterMenuItem;
     private FloatingActionButton fabAcceptFitting, fabRejectFitting;
 
 
@@ -93,7 +101,6 @@ public class PlotActivity extends AppCompatActivity {
         PlotActivity.this.setTaskDescription(taskDescription);
 
         mDrawerLayout = findViewById(R.id.drawer_layout);
-
 
 
         setupToolbar();
@@ -113,6 +120,7 @@ public class PlotActivity extends AppCompatActivity {
         });
         energyCalibration = drawer.getMenu().findItem(R.id.action_energy);
         mapFittings = drawer.getMenu().findItem(R.id.action_map);
+        filterMenuItem = drawer.getMenu().findItem(R.id.action_filters);
 
         AppState.controller.addListener(event -> {
             updateUI();
@@ -266,51 +274,13 @@ public class PlotActivity extends AppCompatActivity {
 
     private void startup() {
 
-        PeakabooConfiguration.compression = true;
-        PeakabooConfiguration.diskstore = true;
-        //PeakabooConfiguration.overrideSpectrumSerializer = () -> Serializers.kryo(ISpectrum.class);
-        //PeakabooConfiguration.overrideSpectrumCompressor = () -> Compressors.deflate();
-
-        PeakabooLog.init(new File(this.getFilesDir() + "/Logging/"));
-        DataSourcePluginManager.init(new File(this.getFilesDir() + "/Plugins/DataSource/"));
-        DataSinkPluginManager.init(new File(this.getFilesDir() + "/Plugins/DataSink/"));
-        FilterPluginManager.init(new File(this.getFilesDir() + "/Plugins/Filters/"));
-        EventfulConfig.uiThreadRunner = new Handler()::post;
-
-
-        PeakabooLog.get().log(Level.INFO, "Max heap size = " + Env.maxHeap() + "MB");
-
-
-
-        new Thread(() -> {
-            PeakTable original = PeakTable.SYSTEM.getSource();
-            String filename;
-            if (Version.release) {
-                filename = "derived-peakfile-" + Version.longVersionNo + ".yaml";
-            } else {
-                filename = "derived-peakfile-" + Version.longVersionNo + "-" + Version.buildDate + ".yaml";
-            }
-            File peakfile = new File(this.getFilesDir() + "/" + filename);
-            PeakTable.SYSTEM.setSource(new SerializedPeakTable(original, peakfile));
-        }).start();
+        AppState.init(this.getFilesDir().toString());
 
 
         if (AppState.controller == null) {
             AppState.controller = new PlotController(this.getFilesDir());
         }
 
-//        chart = new MPPlotChart(this, AppState.controller) {
-//            @Override
-//            protected void onRequestFitting(int channel) { tryFit(channel); }
-//
-//            @Override
-//            protected void onSelectFitting(FittingResult fitting) { onFittingSelected(fitting); }
-//        };
-
-//        ZoomableViewGroup zoomable = new ZoomableViewGroup(this);
-//        zoomable.setLayoutParams(new ViewGroup.LayoutParams(
-//                ViewGroup.LayoutParams.MATCH_PARENT,
-//                ViewGroup.LayoutParams.MATCH_PARENT));
 
         chart = findViewById(R.id.plot_chart);
         chart.setOnRequestFitting(this::tryFit);
@@ -333,39 +303,57 @@ public class PlotActivity extends AppCompatActivity {
 
     private void updateUI() {
 
-        if (energyCalibration != null) energyCalibration.setEnabled(true);//AppState.controller.data().hasDataSet());
+        //Drawer menu items enabled when dataset present
+        if (energyCalibration != null) energyCalibration.setEnabled(true);
         if (mapFittings != null) mapFittings.setEnabled(
                 AppState.controller.data().hasDataSet() &&
                 !AppState.controller.fitting().getFittingSelections().isEmpty() &&
                 !AppState.controller.fitting().getEnergyCalibration().isZero()
         );
 
+        //Floating Action Buttons
         if (!AppState.controller.fitting().getProposedTransitionSeries().isEmpty()) {
             if (fabAcceptFitting != null){
                 fabAcceptFitting.invalidate();
                 if (fabRejectFitting != null) fabRejectFitting.hide();
                 if (!fabAcceptFitting.isShown()) fabAcceptFitting.show();
             }
-            //if (approveFitting != null) approveFitting.setVisible(true);
-            //if (rejectFitting != null) rejectFitting.setVisible(true);
         } else if (!AppState.controller.fitting().getHighlightedTransitionSeries().isEmpty()) {
             if (fabRejectFitting != null){
                 fabRejectFitting.invalidate();
                 if (fabAcceptFitting != null) fabAcceptFitting.hide();
                 if (!fabRejectFitting.isShown()) fabRejectFitting.show();
             }
-            //if (approveFitting != null) approveFitting.setVisible(false);
-            //if (rejectFitting != null) rejectFitting.setVisible(true);
         } else {
             if (fabAcceptFitting != null && fabAcceptFitting.isShown()) fabAcceptFitting.hide();
             if (fabRejectFitting != null && fabRejectFitting.isShown()) fabRejectFitting.hide();
-            //if (approveFitting != null) approveFitting.setVisible(false);
-            //if (rejectFitting != null) rejectFitting.setVisible(false);
         }
+
+        //Filter Submenu
+        Menu filterMenu = filterMenuItem.getSubMenu();
+        filterMenu.clear();
+        MenuItem item = filterMenu.add("Add Filter");
+        item.setOnMenuItemClickListener(mi -> {
+            promptAddFilter();
+            return true;
+        });
+
+        for (Filter filter : AppState.controller.filtering().getActiveFilters()) {
+            createFilterMenuEntry(filter);
+        }
+
 
         chart.invalidate();
     }
 
+    private void createFilterMenuEntry(Filter filter) {
+        Menu filterMenu = filterMenuItem.getSubMenu();
+        MenuItem item = filterMenu.add(filter.getFilterName());
+        item.setOnMenuItemClickListener(menuitem -> {
+            //TODO: Create Filter Preferences Dialog
+            return true;
+        });
+    }
 
 
     private void selectDataSet() {
@@ -420,6 +408,11 @@ public class PlotActivity extends AppCompatActivity {
 
 
     private void tryFit(int channel) {
+        if (AppState.controller.fitting().getEnergyCalibration().isZero()) {
+            promptEnergyCalibration();
+            return;
+        }
+
         List<TransitionSeries> proposals = AppState.controller.fitting().proposeTransitionSeriesFromChannel(channel, null);
         if (proposals == null || proposals.size() == 0) {
             return;
@@ -428,6 +421,8 @@ public class PlotActivity extends AppCompatActivity {
         AppState.controller.fitting().addProposedTransitionSeries(proposals.get(0));
         updateUI();
     }
+
+
 
     private void actionApproveFitting() {
         AppState.controller.fitting().commitProposedTransitionSeries();
@@ -489,9 +484,6 @@ public class PlotActivity extends AppCompatActivity {
                     }
                 }
                 System.out.println("Success!");
-                //TODO: Hack
-                AppState.controller.fitting().setMaxEnergy(20.58f);
-                AppState.controller.fitting().setMinEnergy(0f);
                 AppState.dataloader = null;
                 AppState.dataloaderjob = null;
 
@@ -569,6 +561,44 @@ public class PlotActivity extends AppCompatActivity {
         AppState.mapresults = maps;
         AppState.mapcontroller = null;
         PlotActivity.this.startActivity(mapIntent);
+    }
+
+    private void promptAddFilter() {
+        BoltPluginSet<FilterPlugin> plugins = FilterPluginManager.SYSTEM.getPlugins();
+        List<BoltPluginController<? extends FilterPlugin>> indexedPlugins = new ArrayList<>();
+        for (BoltPluginController<? extends FilterPlugin> plugin : plugins.getAll()) {
+            indexedPlugins.add(plugin);
+        }
+
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Add Filter");
+
+        String[] names = indexedPlugins.stream().map(p -> p.getName()).collect(Collectors.toList()).toArray(new String[0]);
+        builder.setItems(names, (dialog, index) -> {
+            BoltPluginController<? extends FilterPlugin> selected = indexedPlugins.get(index);
+            Filter filter = selected.create();
+            filter.initialize();
+            AppState.controller.filtering().addFilter(filter);
+        });
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
+
+    }
+
+    private void promptEnergyCalibration() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage("Cannot add fittings without energy calibration. Calibrate now?");
+        builder.setTitle("No Energy Calibration");
+        builder.setNegativeButton("Cancel", (dialog, id) -> {
+        });
+        builder.setPositiveButton("OK", (dialog, id) -> {
+            showEnergyCalibration();
+        });
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
     }
 
     private void showEnergyCalibration() {
