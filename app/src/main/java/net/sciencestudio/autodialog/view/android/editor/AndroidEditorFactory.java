@@ -51,11 +51,11 @@ public class AndroidEditorFactory {
     private static <T> AndroidEditor<T> fallback(CoreStyle fallbackStyle, Context context) {
         switch (fallbackStyle) {
             case BOOLEAN: return (AndroidEditor<T>) new BooleanEditor(context);
-            //case TEXT_VALUE: return (AndroidEditor<T>) new TextBoxEditor();
-            //case TEXT_AREA: return (AndroidEditor<T>) new TextAreaEditor();
+            case TEXT_VALUE: return (AndroidEditor<T>) new TextBoxEditor(context);
+            case TEXT_AREA: return (AndroidEditor<T>) new TextAreaEditor(context);
             case INTEGER: return (AndroidEditor<T>) new IntegerEditor(context);
             case FLOAT: return (AndroidEditor<T>) new FloatEditor(context);
-            //case LIST: return (AndroidEditor<T>) new ListEditor<T>();
+            case LIST: return (AndroidEditor<T>) new ListEditor<T>(context);
             case SPACING: return (AndroidEditor<T>) new SeparatorEditor(context);
             default: return null;
         }

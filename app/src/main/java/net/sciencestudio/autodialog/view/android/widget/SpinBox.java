@@ -55,7 +55,12 @@ public class SpinBox extends LinearLayout {
 
         TypedValue typedValue = new TypedValue();
         context.getTheme().resolveAttribute(android.R.attr.colorAccent, typedValue, true);
-        int accentColour = typedValue.data;
+        int accentColour;
+        if (super.isEnabled()) {
+            accentColour = typedValue.data;
+        } else {
+            accentColour = 0xff777777;
+        }
 
         Paint paint = new Paint();
         paint.setStyle(Paint.Style.FILL);
@@ -256,6 +261,14 @@ public class SpinBox extends LinearLayout {
         button.setBackgroundColor(0x00000000);
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT, 0f);
         button.setLayoutParams(params);
+    }
+
+    public void setEnabled(boolean enabled) {
+        super.setEnabled(enabled);
+        minus.setEnabled(enabled);
+        plus.setEnabled(enabled);
+        text.setEnabled(enabled);
+        this.invalidate();
     }
 
 }

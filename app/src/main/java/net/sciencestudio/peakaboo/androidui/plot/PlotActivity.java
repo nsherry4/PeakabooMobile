@@ -8,7 +8,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Handler;
 import android.provider.OpenableColumns;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
@@ -25,19 +24,14 @@ import android.view.View;
 import android.widget.Toast;
 
 import net.sciencestudio.autodialog.model.Group;
-import net.sciencestudio.autodialog.view.android.AndroidAutoDialog;
-import net.sciencestudio.bolt.plugin.core.BoltPluginController;
-import net.sciencestudio.bolt.plugin.core.BoltPluginSet;
-import net.sciencestudio.peakaboo.androidui.AndroidDataFile;
+import net.sciencestudio.peakaboo.androidui.plot.filter.FilterDialogFragment;
+import net.sciencestudio.peakaboo.datasource.model.datafile.AndroidDataFile;
 import net.sciencestudio.peakaboo.androidui.AppState;
 import net.sciencestudio.peakaboo.androidui.R;
-import net.sciencestudio.peakaboo.androidui.log.LogViewActivity;
 import net.sciencestudio.peakaboo.androidui.map.MapActivity;
 import net.sciencestudio.peakaboo.androidui.plot.chart.cyclops.CyclopsPlotView;
 import net.sciencestudio.plural.android.ExecutorSetView;
 import net.sciencestudio.plural.android.StreamExecutorView;
-import net.sciencestudio.scratch.encoders.compressors.Compressors;
-import net.sciencestudio.scratch.encoders.serializers.Serializers;
 
 import java.io.File;
 import java.io.IOException;
@@ -45,32 +39,18 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Consumer;
 import java.util.logging.Level;
-import java.util.stream.Collectors;
 
-import cyclops.ISpectrum;
 import eventful.EventfulConfig;
-import peakaboo.common.Env;
-import peakaboo.common.PeakabooConfiguration;
 import peakaboo.common.PeakabooLog;
-import peakaboo.common.Version;
 import peakaboo.controller.plotter.PlotController;
 import peakaboo.controller.plotter.data.DataLoader;
 import peakaboo.curvefit.curve.fitting.FittingResult;
-import peakaboo.curvefit.peak.table.PeakTable;
-import peakaboo.curvefit.peak.table.SerializedPeakTable;
 import peakaboo.curvefit.peak.transition.TransitionSeries;
 import peakaboo.dataset.DatasetReadResult;
-import peakaboo.datasink.plugin.DataSinkPluginManager;
 import peakaboo.datasource.model.DataSource;
-import peakaboo.datasource.plugin.DataSourcePluginManager;
-import peakaboo.filter.model.Filter;
-import peakaboo.filter.model.FilterPluginManager;
-import peakaboo.filter.plugins.FilterPlugin;
 import peakaboo.mapping.results.MapResultSet;
 import plural.executor.ExecutorSet;
 import plural.streams.StreamExecutor;
@@ -192,6 +172,7 @@ public class PlotActivity extends AppCompatActivity {
                 return true;
 
             case R.id.action_filters:
+                showFilters();
                 return true;
 
             case R.id.action_fittings:
@@ -329,31 +310,9 @@ public class PlotActivity extends AppCompatActivity {
             if (fabRejectFitting != null && fabRejectFitting.isShown()) fabRejectFitting.hide();
         }
 
-        //Filter Submenu
-        Menu filterMenu = filterMenuItem.getSubMenu();
-        filterMenu.clear();
-        MenuItem item = filterMenu.add("Add Filter");
-        item.setOnMenuItemClickListener(mi -> {
-            promptAddFilter();
-            return true;
-        });
-
-        for (Filter filter : AppState.controller.filtering().getActiveFilters()) {
-            createFilterMenuEntry(filter);
-        }
 
 
         chart.invalidate();
-    }
-
-    private void createFilterMenuEntry(Filter filter) {
-        Menu filterMenu = filterMenuItem.getSubMenu();
-        MenuItem item = filterMenu.add(filter.getFilterName());
-        item.setOnMenuItemClickListener(menuitem -> {
-            AlertDialog dialog = AndroidAutoDialog.create(filter.getParameterGroup(), this);
-            dialog.show();
-            return true;
-        });
     }
 
 
@@ -564,29 +523,6 @@ public class PlotActivity extends AppCompatActivity {
         PlotActivity.this.startActivity(mapIntent);
     }
 
-    private void promptAddFilter() {
-        BoltPluginSet<FilterPlugin> plugins = FilterPluginManager.SYSTEM.getPlugins();
-        List<BoltPluginController<? extends FilterPlugin>> indexedPlugins = new ArrayList<>();
-        for (BoltPluginController<? extends FilterPlugin> plugin : plugins.getAll()) {
-            indexedPlugins.add(plugin);
-        }
-
-
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Add Filter");
-
-        String[] names = indexedPlugins.stream().map(p -> p.getName()).collect(Collectors.toList()).toArray(new String[0]);
-        builder.setItems(names, (dialog, index) -> {
-            BoltPluginController<? extends FilterPlugin> selected = indexedPlugins.get(index);
-            Filter filter = selected.create();
-            filter.initialize();
-            AppState.controller.filtering().addFilter(filter);
-        });
-
-        AlertDialog dialog = builder.create();
-        dialog.show();
-
-    }
 
     private void promptEnergyCalibration() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -603,10 +539,13 @@ public class PlotActivity extends AppCompatActivity {
     }
 
     private void showEnergyCalibration() {
-
         EnergyCalibrationDialogFragment dialogFragment = new EnergyCalibrationDialogFragment();
         dialogFragment.show(getSupportFragmentManager(), "energy");
+    }
 
+    private void showFilters() {
+        FilterDialogFragment dialogFragment = new FilterDialogFragment();
+        dialogFragment.show(getSupportFragmentManager(), "filters");
     }
 
 }

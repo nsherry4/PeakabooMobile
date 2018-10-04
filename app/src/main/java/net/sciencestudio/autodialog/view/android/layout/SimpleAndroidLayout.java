@@ -2,7 +2,9 @@ package net.sciencestudio.autodialog.view.android.layout;
 
 import android.content.Context;
 import android.graphics.drawable.ColorDrawable;
+import android.view.Gravity;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
@@ -32,6 +34,11 @@ public class SimpleAndroidLayout extends AbstractAndroidLayout {
         for (Value<?> param : group.getValue()) {
             //TODO: Honour requested label positions
             TableRow row = new TableRow(super.context);
+            TableLayout.LayoutParams rowParams = new TableLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
+            );
+            rowParams.gravity = Gravity.CENTER_VERTICAL;
+            row.setLayoutParams(rowParams);
 
             TextView label = new TextView(super.context);
             label.setText(param.getName());
@@ -79,6 +86,7 @@ public class SimpleAndroidLayout extends AbstractAndroidLayout {
                     );
                     pad(params);
                     params.weight = editor.expandHorizontal() ? 0f : 1f;
+                    params.gravity = Gravity.CENTER_VERTICAL;
                     label.setLayoutParams(params);
                     row.addView(label);
 

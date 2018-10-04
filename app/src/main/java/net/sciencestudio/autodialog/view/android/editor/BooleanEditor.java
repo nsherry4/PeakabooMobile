@@ -33,6 +33,7 @@ public class BooleanEditor extends AbstractViewEditor<Boolean> {
             onComponentChanged();
         });
 
+        setEnabled(param.isEnabled());
     }
 
     @Override

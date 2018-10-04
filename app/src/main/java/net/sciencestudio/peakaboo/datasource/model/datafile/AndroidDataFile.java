@@ -1,4 +1,4 @@
-package net.sciencestudio.peakaboo.androidui;
+package net.sciencestudio.peakaboo.datasource.model.datafile;
 
 import android.content.res.AssetFileDescriptor;
 

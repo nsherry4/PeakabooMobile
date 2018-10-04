@@ -8,6 +8,7 @@ import net.sciencestudio.autodialog.model.Group;
 import net.sciencestudio.autodialog.model.Value;
 import net.sciencestudio.autodialog.view.android.layout.AndroidLayout;
 import net.sciencestudio.autodialog.view.android.layout.AndroidLayoutFactory;
+import net.sciencestudio.peakaboo.androidui.R;
 
 public class AndroidAutoDialog {
 
@@ -19,6 +20,9 @@ public class AndroidAutoDialog {
         scroller.setFillViewport(true);
         scroller.addView(layout.getView());
         builder.setView(scroller);
+        builder.setPositiveButton(R.string.close, (button, something) -> {
+            //It will close on it's own
+        });
         return builder.create();
     }
 

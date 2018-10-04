@@ -22,9 +22,6 @@
         android:orderInCategory="110"
         android:title="@string/action_filters"
         android:visible="true">
-        <menu
-            android:id="@+id/action_filters_submenu">
-        </menu>
     </item>
 
     <item

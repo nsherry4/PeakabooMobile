@@ -33,7 +33,7 @@ public class FloatEditor extends AbstractViewEditor<Float> {
         component.setValue(parameter.getValue());
 
         component.setOnValueChangeListener(v -> onComponentChanged());
-
+        setEnabled(param.isEnabled());
     }
 
     @Override

@@ -5,7 +5,6 @@ import android.util.AttributeSet;
 import android.view.View;
 
 import net.sciencestudio.autodialog.model.Parameter;
-import net.sciencestudio.autodialog.view.android.support.AutoAttributeSet;
 import net.sciencestudio.autodialog.view.android.widget.SpinBox;
 
 import java.text.DecimalFormat;
@@ -32,7 +31,6 @@ public class IntegerEditor extends AbstractViewEditor<Integer> {
     public void initialize(Parameter<Integer> parameter) {
         super.param = parameter;
 
-        AttributeSet attrs = new AutoAttributeSet();
         component = new SpinBox(super.context);
         component.setFormat(new DecimalFormat("0"));
         component.setStep(1);
@@ -40,7 +38,7 @@ public class IntegerEditor extends AbstractViewEditor<Integer> {
 
 
         component.setOnValueChangeListener(v -> onComponentChanged());
-
+        setEnabled(param.isEnabled());
     }
 
     @Override

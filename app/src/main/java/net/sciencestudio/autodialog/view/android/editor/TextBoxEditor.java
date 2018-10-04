@@ -2,46 +2,47 @@ package net.sciencestudio.autodialog.view.android.editor;
 
 import android.content.Context;
 import android.view.View;
+import android.widget.EditText;
+import android.widget.TextView;
 
 import net.sciencestudio.autodialog.model.Parameter;
-import net.sciencestudio.autodialog.view.android.support.DisplayHelper;
 import net.sciencestudio.autodialog.view.editors.Editor;
 
-public class SeparatorEditor extends AbstractViewEditor<Object> {
+public class TextBoxEditor extends AbstractViewEditor<String> {
 
-    private View sep;
+    private EditText control;
 
-    public SeparatorEditor(Context context) {
+    public TextBoxEditor(Context context) {
         super(context);
     }
 
+
     @Override
     protected void setEnabled(boolean enabled) {
-
+        control.setEnabled(enabled);
     }
 
     @Override
     public View getView() {
-        return null;
+        return control;
     }
 
     @Override
-    public void initialize(Parameter<Object> parameter) {
+    public void initialize(Parameter<String> parameter) {
         super.param = parameter;
+        control = new EditText(super.context);
 
-        sep = new View(super.context);
-        sep.setBackgroundColor(0x00000000);
-        sep.setMinimumHeight(DisplayHelper.dpToPixel(1, super.context));
+        setEnabled(param.isEnabled());
     }
 
     @Override
-    public Object getEditorValue() {
-        return null;
+    public String getEditorValue() {
+        return control.getText().toString();
     }
 
     @Override
-    public void setEditorValue(Object o) {
-
+    public void setEditorValue(String s) {
+        control.setText(s, TextView.BufferType.EDITABLE);
     }
 
     @Override
@@ -51,16 +52,16 @@ public class SeparatorEditor extends AbstractViewEditor<Object> {
 
     @Override
     public boolean expandHorizontal() {
-        return true;
+        return false;
     }
 
     @Override
     public LabelStyle getLabelStyle() {
-        return LabelStyle.LABEL_HIDDEN;
+        return LabelStyle.LABEL_ON_SIDE;
     }
 
     @Override
     public Object getComponent() {
-        return sep;
+        return control;
     }
 }
