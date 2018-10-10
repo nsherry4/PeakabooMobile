@@ -13,7 +13,7 @@ import android.widget.ImageButton;
 import android.widget.ListView;
 
 import net.sciencestudio.autodialog.view.android.AndroidAutoDialog;
-import net.sciencestudio.bolt.plugin.core.BoltPluginController;
+import net.sciencestudio.bolt.plugin.core.BoltPluginPrototype;
 import net.sciencestudio.bolt.plugin.core.BoltPluginSet;
 import net.sciencestudio.peakaboo.androidui.AppState;
 import net.sciencestudio.peakaboo.androidui.PeakabooUtil;
@@ -99,8 +99,8 @@ public class FilterDialogFragment extends DialogFragment {
 
     private void promptAddFilter() {
         BoltPluginSet<FilterPlugin> plugins = FilterPluginManager.SYSTEM.getPlugins();
-        List<BoltPluginController<? extends FilterPlugin>> indexedPlugins = new ArrayList<>();
-        for (BoltPluginController<? extends FilterPlugin> plugin : plugins.getAll()) {
+        List<BoltPluginPrototype<? extends FilterPlugin>> indexedPlugins = new ArrayList<>();
+        for (BoltPluginPrototype<? extends FilterPlugin> plugin : plugins.getAll()) {
             indexedPlugins.add(plugin);
         }
 
@@ -110,7 +110,7 @@ public class FilterDialogFragment extends DialogFragment {
 
         String[] names = indexedPlugins.stream().map(p -> p.getName()).collect(Collectors.toList()).toArray(new String[0]);
         builder.setItems(names, (dialog, index) -> {
-            BoltPluginController<? extends FilterPlugin> selected = indexedPlugins.get(index);
+            BoltPluginPrototype<? extends FilterPlugin> selected = indexedPlugins.get(index);
             Filter filter = selected.create();
             filter.initialize();
             AppState.controller.filtering().addFilter(filter);
