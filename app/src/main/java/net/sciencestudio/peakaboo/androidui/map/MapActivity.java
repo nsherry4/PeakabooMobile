@@ -88,13 +88,13 @@ public class MapActivity extends AppCompatActivity {
     private void populateFittingsMenu(Menu menu) {
         MapFittingSettings fitSettings = AppState.mapcontroller.getSettings().getMapFittings();
         int order = 0;
-        menu.setGroupCheckable(1, true, false);
 
         for (TransitionSeries ts : fitSettings.getAllTransitionSeries()) {
-            MenuItem item = menu.add(1, Menu.NONE, order++, ts.toString());
-            item.setCheckable(true);
-            item.setChecked(fitSettings.getTransitionSeriesVisibility(ts));
+
+            boolean visible = fitSettings.getTransitionSeriesVisibility(ts);
+            MenuItem item = menu.add(Menu.NONE, Menu.NONE, order++, ts.toString());
             item.setOnMenuItemClickListener(this::onFittingItemClicked);
+            item.setIcon(visible ? R.drawable.ic_check_box_black_24dp : R.drawable.ic_check_box_outline_blank_black_24dp);
             menuItems.put(item, ts);
         }
     }
@@ -103,13 +103,18 @@ public class MapActivity extends AppCompatActivity {
         MapFittingSettings fitSettings = AppState.mapcontroller.getSettings().getMapFittings();
 
         if (menuItems.containsKey(item)) {
-            System.out.println("item = " + item);
             TransitionSeries ts = menuItems.get(item);
+            boolean visible = fitSettings.getTransitionSeriesVisibility(ts);
 
-            fitSettings.setTransitionSeriesVisibility(ts, !fitSettings.getTransitionSeriesVisibility(ts));
-            item.setChecked(fitSettings.getTransitionSeriesVisibility(ts));
+            //flip visibility
+            visible = !visible;
 
+            //update the model + view
+            fitSettings.setTransitionSeriesVisibility(ts, visible);
+            item.setIcon(visible ? R.drawable.ic_check_box_black_24dp : R.drawable.ic_check_box_outline_blank_black_24dp);
+            //item.setChecked(visible);
             fitSettings.invalidateInterpolation();
+
             return true;
         }
         return false;
