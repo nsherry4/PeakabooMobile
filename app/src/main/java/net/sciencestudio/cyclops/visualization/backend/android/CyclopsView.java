@@ -28,9 +28,15 @@ public abstract class CyclopsView extends View {
     private int viewportWidth = 0;
     private int viewportHeight = 0;
     public float dpiAdjust = 1;
-    private float scaleFactor = 1f;
-    private float scrollPercentX = 0f;
-    private float scrollPercentY = 0f;
+
+    private float plotStartX = -1;
+    private float plotStartY = -1;
+    private float plotEndX = -1;
+    private float plotEndY = -1;
+    private boolean plotSizeInit = false;
+
+
+
 
     private boolean onX = false, onY = false;
 
@@ -51,11 +57,29 @@ public abstract class CyclopsView extends View {
             @Override
             public boolean onScale(ScaleGestureDetector detector) {
 
-                float newScale = scaleFactor *detector.getScaleFactor();
-                if (newScale >= 1f && newScale <= 5f) {
-                    scaleFactor = scaleFactor * detector.getScaleFactor();
-                    CyclopsView.this.invalidate();
+                plotWidth = (int)(plotEndX - plotStartX);
+                plotHeight = (int)(plotEndY - plotStartY);
+
+                //focus is pixel position on screen, need it in pixel position on plot
+                float focusX = detector.getFocusX() - plotStartX;
+                float focusY = detector.getFocusY() - plotStartY;
+                float scaleX = (detector.getScaleFactor()-1f) * plotWidth;
+                float scaleY = (detector.getScaleFactor()-1f) * plotHeight;
+
+                //percentX/Y is focus point as percent of plot dimensions
+                float percentX = focusX/(float)plotWidth;
+                float percentY = focusY/(float)plotHeight;
+
+                if (onX) {
+                    plotStartX = Math.min(0, plotStartX - (percentX * scaleX));
+                    plotEndX = Math.max(viewportWidth, plotEndX + ((1f - percentX) * scaleX));
                 }
+                if (onY) {
+                    plotStartY = Math.min(0, plotStartY - (percentY * scaleY));
+                    plotEndY = Math.max(viewportHeight, plotEndY + ((1f - percentY) * scaleY));
+                }
+                CyclopsView.this.invalidate();
+
                 return true;
             }
 
@@ -78,13 +102,11 @@ public abstract class CyclopsView extends View {
             @Override
             public boolean onSingleTapUp(MotionEvent e) {
                 float rawx = e.getX();
-                float offsetx = scrollOffsetX();
-                float x = rawx + offsetx;
+                float x = rawx - plotStartX;
                 x /= dpiAdjust;
 
                 float rawy = e.getY();
-                float offsety = scrollOffsetY();
-                float y = rawy + offsety;
+                float y = rawy - plotStartY;
                 y /= dpiAdjust;
 
                 return CyclopsView.this.onSingleTap(x, y);
@@ -92,32 +114,20 @@ public abstract class CyclopsView extends View {
 
             @Override
             public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
-                if (plotWidth <= 0 || plotHeight <= 0) {
-                    return true;
-                }
-
-                float extraPercentX = (distanceX / (float)plotWidth);
-                scrollPercentX += extraPercentX;
-                scrollPercentX = Math.max(0, Math.min(1f, scrollPercentX));
-
-                float extraPercentY = (distanceY / (float)plotHeight);
-                scrollPercentY += extraPercentY;
-                scrollPercentY = Math.max(0, Math.min(1f, scrollPercentY));
-
-                CyclopsView.this.invalidate();
-                return true;
+                return CyclopsView.this.onScroll(distanceX, distanceY);
             }
 
             @Override
             public void onLongPress(MotionEvent e) {
+                // Note: We perform a dpi-adjust here because the child will
+                // need to use x, y to look up what's in that part of the drawing,
+                // but it's reference drawing will be in dpi-adjusted units.
                 float rawx = e.getX();
-                float offsetx = scrollOffsetX();
-                float x = rawx + offsetx;
+                float x = rawx - plotStartX;
                 x /= dpiAdjust;
 
                 float rawy = e.getY();
-                float offsety = scrollOffsetY();
-                float y = rawy + offsety;
+                float y = rawy - plotStartY;
                 y /= dpiAdjust;
 
                 CyclopsView.this.onLongPress(x, y);
@@ -131,59 +141,119 @@ public abstract class CyclopsView extends View {
 
     }
 
+    private boolean onScroll(float distanceX, float distanceY) {
+
+        if (onX) {
+            if (plotStartX - distanceX <= 0 && plotEndX - distanceX >= viewportWidth) {
+                plotStartX -= distanceX;
+                plotEndX -= distanceX;
+            }
+        }
+        if (onY) {
+            if (plotStartY - distanceY <= 0 && plotEndY - distanceY >= viewportHeight) {
+                plotStartY -= distanceY;
+                plotEndY -= distanceY;
+            }
+        }
+
+        CyclopsView.this.invalidate();
+        return true;
+    }
+
     @Override
     protected void onDraw(Canvas canvas) {
-        plotWidth = (int) (canvas.getWidth() * scaleFactor);
+
+        //the canvas is basically our viewport to the whole plot
         viewportWidth = canvas.getWidth();
-        plotHeight = (int) (canvas.getHeight() * scaleFactor);
         viewportHeight = canvas.getHeight();
 
+        //initialize plot size if empty (eg first draw)
+        if (plotSizeInit == false) {
+            plotStartX = 0;
+            plotStartY = 0;
+            plotEndX = viewportWidth;
+            plotEndY = viewportHeight;
+            plotSizeInit = true;
+        }
+
+        //convenience
+        plotWidth = (int)(plotEndX - plotStartX);
+        plotHeight = (int)(plotEndY - plotStartY);
+
+        //If the plot size is smaller than the viewport, reset and redo
+        if (plotHeight < viewportHeight || plotWidth < viewportWidth) {
+            plotStartX = 0;
+            plotStartY = 0;
+            plotEndX = viewportWidth;
+            plotEndY = viewportHeight;
+        }
+        plotWidth = (int)(plotEndX - plotStartX);
+        plotHeight = (int)(plotEndY - plotStartY);
+
+        //Adjust for different screen densities
         DisplayMetrics metrics = getResources().getDisplayMetrics();
         float density = metrics.densityDpi;
-        dpiAdjust = density / 213f;
+        dpiAdjust = density / 160f;
+
+        //create, scale, and translate a surface to draw the part of the plot we want
+        AndroidBitmapSurface surface = ensureBitmap(canvas, viewportWidth, viewportHeight);
+        surface.translate(plotStartX, plotStartY);
+        surface.scale(dpiAdjust, dpiAdjust);
+        Coord<Integer> size = new Coord<>((int)(plotWidth/dpiAdjust), (int)(plotHeight/dpiAdjust));
+        paint(surface, size);
+        canvas.drawBitmap(bitmap, 0, 0, new Paint());
 
 
 
-
-        try {
-
-            //get base dimensions and positions for drawing
-            int bmWidth = onX ? plotWidth : viewportWidth;
-            int bmHeight = onY ? plotHeight : viewportHeight;
-            float offsetX = onX ? scrollOffsetX() : 0f;
-            float offsetY = onY ? scrollOffsetY() : 0f;
-
-            //We can't generate a bitmap larger than the max allowed size. Rather than doing
-            //that, we sacrifice resolution/clarity
-            float maxWidth = canvas.getMaximumBitmapWidth();
-            float maxHeight = canvas.getMaximumBitmapHeight();
-            float adjust = dpiAdjust;
-            float tooLargeRatio = -1f;
-            if (maxWidth < bmWidth || maxHeight < bmHeight) {
-                System.out.println(bmWidth + ", " + bmHeight);
-                tooLargeRatio = Math.min(maxWidth / (float)bmWidth, maxHeight / (float)bmHeight);
-                System.out.println(tooLargeRatio);
-                bmHeight = (int) Math.min(maxHeight, bmHeight * tooLargeRatio);
-                bmWidth = (int) Math.min(maxWidth, bmWidth * tooLargeRatio);
-                adjust *= tooLargeRatio;
-                System.out.println(bmWidth + ", " + bmHeight);
-                System.out.println("----------------------------");
-                canvas.scale(1f/tooLargeRatio, 1f/tooLargeRatio);
-                offsetX *= tooLargeRatio;
-                offsetY *= tooLargeRatio;
-            }
-
-
-            AndroidBitmapSurface surface = ensureBitmap(canvas, bmWidth, bmHeight);
-            surface.scale(adjust, adjust);
-            Coord<Integer> size = new Coord<>((int) (bmWidth / adjust), (int) (bmHeight / adjust));
-            paint(surface, size);
-
-            canvas.drawBitmap(bitmap, -offsetX, -offsetY, new Paint());
-
-        } catch (RuntimeException e) {
-            PeakabooLog.get().log(Level.SEVERE, "Failed to draw", e);
-        }
+//        plotWidth = (int) (canvas.getWidth() * scaleFactor);
+//        plotHeight = (int) (canvas.getHeight() * scaleFactor);
+//
+//        DisplayMetrics metrics = getResources().getDisplayMetrics();
+//        float density = metrics.densityDpi;
+//        dpiAdjust = density / 213f;
+//
+//
+//
+//
+//        try {
+//
+//            //get base dimensions and positions for drawing
+//            int bmWidth = onX ? plotWidth : viewportWidth;
+//            int bmHeight = onY ? plotHeight : viewportHeight;
+//            float offsetX = onX ? scrollOffsetX() : 0f;
+//            float offsetY = onY ? scrollOffsetY() : 0f;
+//
+//            //We can't generate a bitmap larger than the max allowed size. Rather than doing
+//            //that, we sacrifice resolution/clarity
+//            float maxWidth = canvas.getMaximumBitmapWidth();
+//            float maxHeight = canvas.getMaximumBitmapHeight();
+//            float adjust = dpiAdjust;
+//            float tooLargeRatio = -1f;
+//            if (maxWidth < bmWidth || maxHeight < bmHeight) {
+//                System.out.println(bmWidth + ", " + bmHeight);
+//                tooLargeRatio = Math.min(maxWidth / (float)bmWidth, maxHeight / (float)bmHeight);
+//                System.out.println(tooLargeRatio);
+//                bmHeight = (int) Math.min(maxHeight, bmHeight * tooLargeRatio);
+//                bmWidth = (int) Math.min(maxWidth, bmWidth * tooLargeRatio);
+//                adjust *= tooLargeRatio;
+//                System.out.println(bmWidth + ", " + bmHeight);
+//                System.out.println("----------------------------");
+//                canvas.scale(1f/tooLargeRatio, 1f/tooLargeRatio);
+//                offsetX *= tooLargeRatio;
+//                offsetY *= tooLargeRatio;
+//            }
+//
+//
+//            AndroidBitmapSurface surface = ensureBitmap(canvas, bmWidth, bmHeight);
+//            surface.scale(adjust, adjust);
+//            Coord<Integer> size = new Coord<>((int) (bmWidth / adjust), (int) (bmHeight / adjust));
+//            paint(surface, size);
+//
+//            canvas.drawBitmap(bitmap, -offsetX, -offsetY, new Paint());
+//
+//        } catch (RuntimeException e) {
+//            PeakabooLog.get().log(Level.SEVERE, "Failed to draw", e);
+//        }
 
 
     }
@@ -197,29 +267,23 @@ public abstract class CyclopsView extends View {
         return handled;
     }
 
-    protected float scrollOffsetX() {
-        return (plotWidth-viewportWidth)*scrollPercentX;
-    }
 
-    protected float scrollOffsetY() {
-        return (plotHeight-viewportHeight)*scrollPercentY;
-    }
 
-    public int getPlotWidth() {
-        return plotWidth;
-    }
-
-    public int getPlotHeight() {
-        return plotHeight;
-    }
-
-    public int getViewportWidth() {
-        return viewportWidth;
-    }
-
-    public int getViewportHeight() {
-        return viewportHeight;
-    }
+//    public int getPlotWidth() {
+//        return plotWidth;
+//    }
+//
+//    public int getPlotHeight() {
+//        return plotHeight;
+//    }
+//
+//    public int getViewportWidth() {
+//        return viewportWidth;
+//    }
+//
+//    public int getViewportHeight() {
+//        return viewportHeight;
+//    }
 
 
     /**

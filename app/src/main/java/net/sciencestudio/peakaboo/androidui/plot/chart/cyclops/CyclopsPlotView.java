@@ -53,6 +53,9 @@ public class CyclopsPlotView extends CyclopsView {
     @Override
     protected boolean onSingleTap(float x, float y) {
         int channel = plotter.getChannel((int)x);
+        if (channel < 0 || channel >= AppState.controller.data().getDataSet().getAnalysis().channelsPerScan()) {
+            return true;
+        }
 
         float bestValue = 1f;
         FittingResult bestFit = null;
