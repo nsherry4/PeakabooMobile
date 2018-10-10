@@ -61,6 +61,11 @@ public class CyclopsMapView extends CyclopsView {
     }
 
     @Override
+    protected boolean onDoubleTap(float x, float y) {
+        return false;
+    }
+
+    @Override
     protected void onLongPress(float x, float y) {
 
     }

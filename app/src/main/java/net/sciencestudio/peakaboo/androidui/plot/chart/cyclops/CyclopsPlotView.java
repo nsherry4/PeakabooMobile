@@ -4,11 +4,19 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.support.v7.app.AlertDialog;
+import android.text.InputType;
 import android.util.AttributeSet;
+import android.view.ViewGroup;
+import android.widget.EditText;
+import android.widget.FrameLayout;
+import android.widget.LinearLayout;
 
+import net.sciencestudio.autodialog.view.android.support.DisplayHelper;
 import net.sciencestudio.cyclops.visualization.backend.android.CyclopsView;
 import net.sciencestudio.peakaboo.androidui.AppState;
 import net.sciencestudio.cyclops.visualization.backend.android.AndroidBitmapSurface;
+import net.sciencestudio.peakaboo.androidui.R;
 
 import java.util.function.Consumer;
 
@@ -16,6 +24,7 @@ import cyclops.Coord;
 import cyclops.visualization.Surface;
 import cyclops.visualization.drawing.plot.PlotDrawing;
 import peakaboo.curvefit.curve.fitting.FittingResult;
+import peakaboo.curvefit.peak.transition.TransitionSeries;
 import peakaboo.display.plot.PlotData;
 import peakaboo.display.plot.PlotSettings;
 import peakaboo.display.plot.Plotter;
@@ -26,7 +35,7 @@ public class CyclopsPlotView extends CyclopsView {
     private PlotDrawing plotDrawing;
 
     private Consumer<Integer> onRequestFitting = (i) -> {};
-    private Consumer<FittingResult> onSelectFitting = (i) -> {};
+    private Consumer<TransitionSeries> onSelectFitting = (i) -> {};
 
     /**
      * Simple constructor to use when creating a view from code.
@@ -53,26 +62,42 @@ public class CyclopsPlotView extends CyclopsView {
     @Override
     protected boolean onSingleTap(float x, float y) {
         int channel = plotter.getChannel((int)x);
-        if (channel < 0 || channel >= AppState.controller.data().getDataSet().getAnalysis().channelsPerScan()) {
+        TransitionSeries best = AppState.controller.fitting().selectTransitionSeriesAtChannel(channel);
+        onSelectFitting.accept(best);
+        return true;
+    }
+
+    @Override
+    protected boolean onDoubleTap(float x, float y) {
+        int channel = plotter.getChannel((int)x);
+        TransitionSeries best = AppState.controller.fitting().selectTransitionSeriesAtChannel(channel);
+        if (best == null) {
             return true;
         }
 
-        float bestValue = 1f;
-        FittingResult bestFit = null;
-
-        if (AppState.controller.fitting().getFittingSelectionResults() == null) {
-            return true;
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        EditText input = new EditText(getContext());
+        input.setInputType(InputType.TYPE_CLASS_TEXT);
+        if (AppState.controller.fitting().hasAnnotation(best)) {
+            input.setText(AppState.controller.fitting().getAnnotation(best));
         }
 
-        for (FittingResult fit : AppState.controller.fitting().getFittingSelectionResults()) {
-            float value = fit.getFit().get(channel);
-            if (value > bestValue) {
-                bestValue = value;
-                bestFit = fit;
-            }
-        }
+        LinearLayout layout = new LinearLayout(getContext());
+        ViewGroup.MarginLayoutParams margin = new ViewGroup.MarginLayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        int marginSize = DisplayHelper.dpToPixel(20, getContext());
+        margin.setMargins(marginSize, marginSize, marginSize, marginSize);
+        input.setLayoutParams(margin);
+        layout.addView(input);
+        builder.setView(layout);
+        builder.setTitle("Annotation for " + best.toString());
 
-        onSelectFitting.accept(bestFit);
+        builder.setPositiveButton("OK", (d, e) -> {
+            AppState.controller.fitting().setAnnotation(best, input.getText().toString());
+        });
+        builder.setNegativeButton("Cancel", (d, e) -> {});
+
+        builder.show();
+
         return true;
     }
 
@@ -86,7 +111,7 @@ public class CyclopsPlotView extends CyclopsView {
         this.onRequestFitting = onRequestFitting;
     }
 
-    public void setOnSelectFitting(Consumer<FittingResult> onSelectFitting) {
+    public void setOnSelectFitting(Consumer<TransitionSeries> onSelectFitting) {
         this.onSelectFitting = onSelectFitting;
     }
 }

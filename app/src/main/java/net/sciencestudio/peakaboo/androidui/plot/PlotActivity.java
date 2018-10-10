@@ -404,11 +404,11 @@ public class PlotActivity extends AppCompatActivity {
         updateUI();
     }
 
-    private void onFittingSelected(FittingResult fitting) {
+    private void onFittingSelected(TransitionSeries fitting) {
         AppState.controller.fitting().clearProposedTransitionSeries();
         AppState.controller.fitting().setHighlightedTransitionSeries(Collections.emptyList());
         if (fitting != null) {
-            AppState.controller.fitting().setHighlightedTransitionSeries(Collections.singletonList(fitting.getTransitionSeries()));
+            AppState.controller.fitting().setHighlightedTransitionSeries(Collections.singletonList(fitting));
         }
         updateUI();
     }

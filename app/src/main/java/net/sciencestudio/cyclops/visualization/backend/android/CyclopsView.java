@@ -139,6 +139,31 @@ public abstract class CyclopsView extends View {
             }
         });
 
+        gestureDetector.setOnDoubleTapListener(new GestureDetector.OnDoubleTapListener() {
+            @Override
+            public boolean onSingleTapConfirmed(MotionEvent e) {
+                return false;
+            }
+
+            @Override
+            public boolean onDoubleTap(MotionEvent e) {
+                float rawx = e.getX();
+                float x = rawx - plotStartX;
+                x /= dpiAdjust;
+
+                float rawy = e.getY();
+                float y = rawy - plotStartY;
+                y /= dpiAdjust;
+
+                return CyclopsView.this.onDoubleTap(x, y);
+            }
+
+            @Override
+            public boolean onDoubleTapEvent(MotionEvent e) {
+                return false;
+            }
+        });
+
     }
 
     private boolean onScroll(float distanceX, float distanceY) {
@@ -203,59 +228,6 @@ public abstract class CyclopsView extends View {
         paint(surface, size);
         canvas.drawBitmap(bitmap, 0, 0, new Paint());
 
-
-
-//        plotWidth = (int) (canvas.getWidth() * scaleFactor);
-//        plotHeight = (int) (canvas.getHeight() * scaleFactor);
-//
-//        DisplayMetrics metrics = getResources().getDisplayMetrics();
-//        float density = metrics.densityDpi;
-//        dpiAdjust = density / 213f;
-//
-//
-//
-//
-//        try {
-//
-//            //get base dimensions and positions for drawing
-//            int bmWidth = onX ? plotWidth : viewportWidth;
-//            int bmHeight = onY ? plotHeight : viewportHeight;
-//            float offsetX = onX ? scrollOffsetX() : 0f;
-//            float offsetY = onY ? scrollOffsetY() : 0f;
-//
-//            //We can't generate a bitmap larger than the max allowed size. Rather than doing
-//            //that, we sacrifice resolution/clarity
-//            float maxWidth = canvas.getMaximumBitmapWidth();
-//            float maxHeight = canvas.getMaximumBitmapHeight();
-//            float adjust = dpiAdjust;
-//            float tooLargeRatio = -1f;
-//            if (maxWidth < bmWidth || maxHeight < bmHeight) {
-//                System.out.println(bmWidth + ", " + bmHeight);
-//                tooLargeRatio = Math.min(maxWidth / (float)bmWidth, maxHeight / (float)bmHeight);
-//                System.out.println(tooLargeRatio);
-//                bmHeight = (int) Math.min(maxHeight, bmHeight * tooLargeRatio);
-//                bmWidth = (int) Math.min(maxWidth, bmWidth * tooLargeRatio);
-//                adjust *= tooLargeRatio;
-//                System.out.println(bmWidth + ", " + bmHeight);
-//                System.out.println("----------------------------");
-//                canvas.scale(1f/tooLargeRatio, 1f/tooLargeRatio);
-//                offsetX *= tooLargeRatio;
-//                offsetY *= tooLargeRatio;
-//            }
-//
-//
-//            AndroidBitmapSurface surface = ensureBitmap(canvas, bmWidth, bmHeight);
-//            surface.scale(adjust, adjust);
-//            Coord<Integer> size = new Coord<>((int) (bmWidth / adjust), (int) (bmHeight / adjust));
-//            paint(surface, size);
-//
-//            canvas.drawBitmap(bitmap, -offsetX, -offsetY, new Paint());
-//
-//        } catch (RuntimeException e) {
-//            PeakabooLog.get().log(Level.SEVERE, "Failed to draw", e);
-//        }
-
-
     }
 
     @Override
@@ -266,24 +238,6 @@ public abstract class CyclopsView extends View {
         handled |= gestureDetector.onTouchEvent(me);
         return handled;
     }
-
-
-
-//    public int getPlotWidth() {
-//        return plotWidth;
-//    }
-//
-//    public int getPlotHeight() {
-//        return plotHeight;
-//    }
-//
-//    public int getViewportWidth() {
-//        return viewportWidth;
-//    }
-//
-//    public int getViewportHeight() {
-//        return viewportHeight;
-//    }
 
 
     /**
@@ -311,5 +265,6 @@ public abstract class CyclopsView extends View {
 
     protected abstract void paint(Surface s, Coord<Integer> size);
     protected abstract boolean onSingleTap(float x, float y);
+    protected abstract boolean onDoubleTap(float x, float y);
     protected abstract void onLongPress(float x, float y);
 }
